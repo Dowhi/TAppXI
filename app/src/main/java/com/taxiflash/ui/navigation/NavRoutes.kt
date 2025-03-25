@@ -42,6 +42,7 @@ object NavRoutes {
     const val AJUSTES = "ajustes"
     const val RECORDATORIOS = "recordatorios"
     const val EDITAR_DIA = "editarDia"
+    const val EDICION_DIA = "edicion_dia/{fecha}"
     
     // Funciones para generar rutas con parámetros
     fun vistaTurno(turnoId: String) = "vista_carreras/$turnoId"

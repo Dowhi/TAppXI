@@ -65,7 +65,7 @@ class RecordatoriosViewModel(application: Application) : AndroidViewModel(applic
     /**
      * Guarda un recordatorio
      */
-    fun guardarRecordatorio(tipo: TipoRecordatorio, titulo: String, fecha: Long, descripcion: String, horaAviso: String) {
+    fun guardarRecordatorio(tipo: TipoRecordatorio, titulo: String, fecha: Long, descripcion: String, horaAviso: String, horaAviso2: String = "") {
         viewModelScope.launch {
             try {
                 // Si hay un recordatorio seleccionado, lo actualizamos
@@ -74,6 +74,10 @@ class RecordatoriosViewModel(application: Application) : AndroidViewModel(applic
                 // Si estamos editando, cancelar la notificación anterior
                 recordatorioActual?.let {
                     NotificationUtil.cancelarNotificacion(context, it.id)
+                    // Cancelar la segunda notificación si existe
+                    if (it.horaAviso2.isNotEmpty()) {
+                        NotificationUtil.cancelarNotificacion(context, "${it.id}_2")
+                    }
                 }
                 
                 val nuevoRecordatorio = if (recordatorioActual != null) {
@@ -82,7 +86,8 @@ class RecordatoriosViewModel(application: Application) : AndroidViewModel(applic
                         titulo = titulo,
                         fecha = fecha,
                         descripcion = descripcion,
-                        horaAviso = horaAviso
+                        horaAviso = horaAviso,
+                        horaAviso2 = horaAviso2
                     )
                 } else {
                     Recordatorio(
@@ -91,7 +96,8 @@ class RecordatoriosViewModel(application: Application) : AndroidViewModel(applic
                         titulo = titulo,
                         fecha = fecha,
                         descripcion = descripcion,
-                        horaAviso = horaAviso
+                        horaAviso = horaAviso,
+                        horaAviso2 = horaAviso2
                     )
                 }
                 
@@ -179,6 +185,7 @@ class RecordatoriosViewModel(application: Application) : AndroidViewModel(applic
                 put("fecha", recordatorio.fecha)
                 put("descripcion", recordatorio.descripcion)
                 put("horaAviso", recordatorio.horaAviso)
+                put("horaAviso2", recordatorio.horaAviso2)
             }
             jsonArray.put(jsonObject)
         }
@@ -206,7 +213,8 @@ class RecordatoriosViewModel(application: Application) : AndroidViewModel(applic
                 titulo = jsonObject.getString("titulo"),
                 fecha = jsonObject.getLong("fecha"),
                 descripcion = jsonObject.optString("descripcion", ""),
-                horaAviso = jsonObject.optString("horaAviso", "")
+                horaAviso = jsonObject.optString("horaAviso", ""),
+                horaAviso2 = jsonObject.optString("horaAviso2", "")
             )
             
             recordatorios.add(recordatorio)

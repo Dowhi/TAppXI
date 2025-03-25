@@ -1,5 +1,6 @@
 package com.taxiflash.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.primaryContainerColor
@@ -18,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,14 +38,41 @@ import java.util.*
 fun ResumenDiarioScreen(
     fecha: String,
     onNavigateBack: () -> Unit,
-    viewModel: ResumenDiarioViewModel = viewModel()
+    viewModel: ResumenDiarioViewModel = viewModel(),
+    onEditarDia: (String) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val primaryColor = Color(0xFF1E3F8B) // Color principal azul oscuro
     var showDatePicker by remember { mutableStateOf(false) }
-    var selectedDate by remember { mutableStateOf(parseFecha(fecha)) }
+    
+    // Formatear la fecha para mostrarla en el título
+    val fechaFormateada = remember(fecha) {
+        try {
+            val inputFormat = SimpleDateFormat("ddMMyyyy", Locale("es", "ES"))
+            val date = inputFormat.parse(fecha)
+            val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES"))
+            outputFormat.format(date)
+        } catch (e: Exception) {
+            fecha
+        }
+    }
+    
+    // Formatear la fecha para edición (yyyy-MM-dd)
+    val fechaParaEdicion = remember(fecha) {
+        try {
+            val inputFormat = SimpleDateFormat("ddMMyyyy", Locale("es", "ES"))
+            val date = inputFormat.parse(fecha)
+            val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale("es", "ES"))
+            val resultado = outputFormat.format(date)
+            Log.d("ResumenDiarioScreen", "Fecha formateada para edición: $fecha -> $resultado")
+            resultado
+        } catch (e: Exception) {
+            Log.e("ResumenDiarioScreen", "Error al formatear fecha: ${e.message}", e)
+            fecha
+        }
+    }
 
-    val fechaFormateada = SimpleDateFormat("dd MMMM yyyy", Locale("es", "ES")).format(selectedDate)
-        .replaceFirstChar { it.uppercase() }
+    var selectedDate by remember { mutableStateOf(parseFecha(fecha)) }
 
     LaunchedEffect(selectedDate) {
         viewModel.cargarResumenDiario(selectedDate)
@@ -112,7 +142,14 @@ fun ResumenDiarioScreen(
                     IconButton(onClick = { showDatePicker = true }) {
                         Icon(
                             Icons.Filled.CalendarMonth,
-                            contentDescription = "Cambiar fecha",
+                            contentDescription = "Seleccionar Fecha",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = { onEditarDia(fechaParaEdicion) }) {
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = "Editar día",
                             tint = Color.White
                         )
                     }

@@ -115,7 +115,7 @@ android {
 
 // Versiones de dependencias centralizadas
 ext {
-    compose_bom_version = '2025.02.00'
+    compose_bom_version = '2024.02.00'
     room_version = "2.6.1"
     nav_version = "2.7.6"
     hilt_version = "2.50"
@@ -124,16 +124,18 @@ ext {
 
 dependencies {
     // Core y Kotlin
-    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.core:core-ktx:1.12.0'
     implementation platform('org.jetbrains.kotlin:kotlin-bom:1.9.22')
     
-    // Lifecycle
+    // Lifecycle y LiveData
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    implementation 'androidx.compose.runtime:runtime-livedata:1.5.4'
     
     // Compose
-    implementation 'androidx.activity:activity-compose:1.10.1'
+    implementation 'androidx.activity:activity-compose:1.8.2'
     implementation platform("androidx.compose:compose-bom:$compose_bom_version")
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-graphics'
@@ -141,8 +143,10 @@ dependencies {
     implementation 'androidx.compose.material3:material3'
     implementation 'androidx.compose.material3:material3-window-size-class'
     implementation 'androidx.compose.material:material-icons-core'
-    implementation 'androidx.compose.material:material-icons-extended:1.7.8'
+    implementation 'androidx.compose.material:material-icons-extended'
     implementation 'androidx.compose.material:material'
+    implementation 'androidx.compose.runtime:runtime'
+    implementation 'androidx.compose.foundation:foundation'
     
     // Navegación
     implementation "androidx.navigation:navigation-compose:$nav_version"
@@ -207,6 +211,10 @@ dependencies {
     
     // OpenCSV para generar archivos CSV
     implementation 'com.opencsv:opencsv:5.7.1'
+
+    // PDF Generation
+    implementation 'com.itextpdf:itextpdf:5.5.13.3'
+    implementation 'androidx.documentfile:documentfile:1.0.1'
 }
 
 // Configuración para Kapt

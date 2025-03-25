@@ -2,7 +2,11 @@ package com.taxiflash.ui.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
 
+/**
+ * Entidad que representa una carrera de taxi
+ */
 @Entity(tableName = "carreras")
 data class Carrera(
     @PrimaryKey(autoGenerate = true)
@@ -15,10 +19,9 @@ data class Carrera(
     val formaPago: FormaPago = FormaPago.EFECTIVO,
     val emisora: Boolean = false,
     val aeropuerto: Boolean = false,
-    val turno: String = "Turno 0"
-) {
-
-}
+    val turno: String = "Turno 0",
+    val extraTipsPagados: Double = 0.0
+)
 
 enum class FormaPago {
     EFECTIVO,

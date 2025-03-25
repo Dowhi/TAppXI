@@ -53,7 +53,7 @@ fun LoginScreen(
             modifier = Modifier.padding(bottom = 24.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.monedasbuenas),
+                painter = painterResource(id = R.drawable.fullogo_azul),
                 contentDescription = null,
                 modifier = Modifier.size(40.dp)
             )

@@ -65,7 +65,7 @@ object FileExporter {
             // Obtener URI del archivo usando FileProvider
             val uri = FileProvider.getUriForFile(
                 context,
-                "${context.packageName}.fileprovider",
+                "${context.packageName}.provider",
                 file
             )
             

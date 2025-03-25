@@ -85,9 +85,9 @@ fun Splash(alpha: Float) {
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "TaxiFlash",
+                text = "TAppXI",
                 color = Color.White,
-                fontSize = 40.sp,
+                fontSize = 44.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.alpha(alpha)
             )

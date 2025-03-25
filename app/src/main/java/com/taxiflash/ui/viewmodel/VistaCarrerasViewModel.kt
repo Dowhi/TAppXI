@@ -1,6 +1,7 @@
 package com.taxiflash.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -15,9 +16,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
 
 data class ResumenDia(
     val totalImporte: Double = 0.0,
@@ -49,6 +52,9 @@ class VistaCarrerasViewModel(
     
     private val _turnoActivo = MutableStateFlow(false)
     val turnoActivo: StateFlow<Boolean> = _turnoActivo
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     init {
         cargarDatos()
@@ -149,13 +155,29 @@ class VistaCarrerasViewModel(
     fun eliminarTurnoCompleto(onComplete: () -> Unit) {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
+                Log.d("VistaCarrerasViewModel", "Iniciando eliminación del turno: $turnoId")
+                
                 // Primero eliminamos todas las carreras del turno
-                carreraDao.deleteCarrerasByTurno(turnoId)
+                val carrerasEliminadas = carreraDao.deleteCarrerasByTurnoId(turnoId)
+                Log.d("VistaCarrerasViewModel", "Carreras eliminadas: $carrerasEliminadas")
+                
                 // Luego eliminamos el turno
                 turnoDao.deleteTurno(turnoId)
-                onComplete()
+                Log.d("VistaCarrerasViewModel", "Turno eliminado correctamente: $turnoId")
+                
+                // Llamar al callback en el hilo principal
+                withContext(Dispatchers.Main) {
+                    _isLoading.value = false
+                    onComplete()
+                }
             } catch (e: Exception) {
-                // Manejar el error si es necesario
+                Log.e("VistaCarrerasViewModel", "Error al eliminar turno: ${e.message}", e)
+                // Llamar al callback incluso si hay error, para que la UI pueda manejar el error
+                withContext(Dispatchers.Main) {
+                    _isLoading.value = false
+                    onComplete()
+                }
             }
         }
     }

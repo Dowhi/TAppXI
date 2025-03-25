@@ -294,7 +294,8 @@ private fun ImporteFields(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = primaryColor,
                 focusedLabelColor = primaryColor
-            )
+            ),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp) // Cambia el tamaño aquí
         )
 
         OutlinedTextField(
@@ -313,7 +314,8 @@ private fun ImporteFields(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = primaryColor,
                 focusedLabelColor = primaryColor
-            )
+            ),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 24.sp) // Cambia el tamaño aquí
         )
     }
 }
@@ -381,10 +383,11 @@ private fun FormaPagoOptions(
                 selected = formaPago == FormaPago.VALES,
                 onClick = { onFormaPagoChange(FormaPago.VALES) },
                 label = "Vales",
-                icon = { 
-                    Icon(
-                        imageVector = Icons.Rounded.Redeem,
-                        contentDescription = "Vales"
+                icon = {
+                    Image(
+                        painter = painterResource(R.drawable.vales_nuevo),
+                        contentDescription = "Vales",
+                        modifier = Modifier.size(38.dp)
                     )
                 },
                 modifier = Modifier.weight(1f),
@@ -408,7 +411,7 @@ private fun FormaPagoOptions(
                     Image(
                         painter = painterResource(R.drawable.monedasbuenas),
                         contentDescription = "Monedas",
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(38.dp)
                     )
                 },
                 modifier = Modifier.weight(1f),
@@ -420,10 +423,11 @@ private fun FormaPagoOptions(
                 selected = formaPago == FormaPago.TARJETA,
                 onClick = { onFormaPagoChange(FormaPago.TARJETA) },
                 label = "Tarjeta",
-                icon = { 
-                    Icon(
-                        imageVector = Icons.Rounded.CreditCard,
-                        contentDescription = "Tarjeta"
+                icon = {
+                    Image(
+                        painter = painterResource(R.drawable.tarjeta),
+                        contentDescription = "Tarjeta",
+                        modifier = Modifier.size(38.dp)  // Aumentado tamaño
                     )
                 },
                 modifier = Modifier.weight(1f),
@@ -444,7 +448,7 @@ private fun FormaPagoChip(
     label: String,
     icon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    selectedColor: Color = MaterialTheme.colorScheme.primaryContainer
+    selectedColor: Color = MaterialTheme.colorScheme.tertiaryContainer
 ) {
     ElevatedFilterChip(
         selected = selected,
@@ -484,9 +488,9 @@ private fun OpcionesAdicionales(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Image(
-                painter = painterResource(R.drawable.svgviewer_output__6_),
+                painter = painterResource(R.drawable.antenasvg),
                 contentDescription = "Emisora",
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier.size(46.dp)
             )
             Switch(
                 checked = emisora,
@@ -506,9 +510,9 @@ private fun OpcionesAdicionales(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Image(
-                painter = painterResource(R.drawable.svgviewer_output__3_),
+                painter = painterResource(R.drawable.aeropuerto_20_),
                 contentDescription = "Aeropuerto",
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(46.dp)
             )
             Switch(
                 checked = aeropuerto,

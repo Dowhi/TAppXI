@@ -98,7 +98,7 @@ fun TaxiFlashBottomBar(
                 selected = currentRoute == NavRoutes.INICIO,
                 onClick = {
                     navController.navigate(NavRoutes.INICIO) {
-                        popUpTo(navController.graph.findStartDestination().id) {
+                       popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }
                         launchSingleTop = true

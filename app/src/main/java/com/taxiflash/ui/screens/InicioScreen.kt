@@ -69,6 +69,7 @@ fun InicioScreen(
     val gastos = resumenMensual?.gastos ?: 0.0
     val balance = ingresos - gastos
 
+
     // Animación de entrada
     var startAnimation by remember { mutableStateOf(false) }
     
@@ -139,13 +140,13 @@ fun InicioScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "TaxiFlash",
+                                text = "TAppXI",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "Gestión eficiente para taxistas",
-                                fontSize = 12.sp,
+                                fontSize = 13.sp,
                                 color = Color.Black.copy(alpha = 0.7f)
                             )
                         }
@@ -591,8 +592,8 @@ private fun TurnoActivoCard(
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.errorContainer,
-                                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                                    TaxiYellow,
+                                    TaxiYellow.copy(alpha = 0.7f)
                                 )
                             )
                         )
@@ -605,7 +606,7 @@ private fun TurnoActivoCard(
                         Icon(
                             imageVector = Icons.Default.DirectionsCar,
                             contentDescription = "No hay turno activo",
-                            tint = MaterialTheme.colorScheme.onErrorContainer,
+                            tint = Color.Black,
                             modifier = Modifier.size(48.dp)
                         )
                         
@@ -614,7 +615,7 @@ private fun TurnoActivoCard(
                         Text(
                             text = "No hay turno activo",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            color = Color.Black,
                             textAlign = TextAlign.Center
                         )
                         
@@ -648,15 +649,30 @@ private fun TurnoActivoCard(
                             .padding(16.dp)
                     ) {
                         Column {
-                            Text(
-                                text = "Turno ${turno.numeroTurno}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            
+                            // Fila superior: Turno y Fecha
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                // Turno
+                                Text(
+                                    text = "Turno ${turno.numeroTurno}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+
+                                // Fecha
+                                Text(
+                                    text = "${turno.fecha}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+
                             Spacer(modifier = Modifier.height(10.dp))
-                            
+
                             // Primera fila: Total, H. Inicio
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -667,7 +683,9 @@ private fun TurnoActivoCard(
                                     Text(
                                         text = "Total",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                            alpha = 0.7f
+                                        )
                                     )
                                     Text(
                                         text = "${String.format("%.2f", sumaImportes)}€",
@@ -676,13 +694,15 @@ private fun TurnoActivoCard(
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
-                                
+
                                 // Columna 2: H. Inicio
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = "H. Inicio",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                            alpha = 0.7f
+                                        )
                                     )
                                     Text(
                                         text = "${turno.horaInicio}",
@@ -692,35 +712,22 @@ private fun TurnoActivoCard(
                                     )
                                 }
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
-                            // Segunda fila: Fecha, Kms. Inicio
+
+                            // Segunda fila: Kms. Inicio
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                // Columna 3: Fecha
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Fecha",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                    )
-                                    Text(
-                                        text = "${turno.fecha}",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
-                                }
-                                
-                                // Columna 4: Kms. Inicio
+                                // Kms. Inicio
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = "Kms. Inicio",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                            alpha = 0.7f
+                                        )
                                     )
                                     Text(
                                         text = "${turno.kmInicio}",
@@ -729,10 +736,12 @@ private fun TurnoActivoCard(
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
+
+                                // Puedes agregar aquí otra columna si necesitas más info
                             }
-                            
+
                             Spacer(modifier = Modifier.height(12.dp))
-                            
+
                             Button(
                                 onClick = { onVerTurnoClick(turnoActivo) },
                                 colors = ButtonDefaults.buttonColors(
@@ -743,6 +752,7 @@ private fun TurnoActivoCard(
                                 Text("Ver Detalles")
                             }
                         }
+
                     }
                 }
             }
@@ -823,17 +833,17 @@ private fun StatCard(
                 tint = color,
                 modifier = Modifier.size(24.dp)
             )
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
                 color = TaxiGray
             )
-            
+
             Spacer(modifier = Modifier.height(4.dp))
-            
+
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
@@ -842,4 +852,4 @@ private fun StatCard(
             )
         }
     }
-} 
+}

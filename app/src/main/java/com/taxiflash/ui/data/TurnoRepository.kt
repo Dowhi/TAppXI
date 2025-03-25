@@ -48,7 +48,7 @@ class TurnoRepository @Inject constructor(
     
     // Eliminar turno y sus carreras
     suspend fun eliminarTurnoYCarreras(turnoId: String) {
-        carreraDao.deleteCarrerasByTurno(turnoId)
+        carreraDao.deleteCarrerasByTurnoId(turnoId)
         turnoDao.deleteTurno(turnoId)
     }
     

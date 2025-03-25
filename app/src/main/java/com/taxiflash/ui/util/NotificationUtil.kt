@@ -32,17 +32,54 @@ object NotificationUtil {
     fun programarNotificacion(context: Context, recordatorio: Recordatorio) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         
+        // Programar la primera notificación
+        programarAlarma(
+            context, 
+            alarmManager, 
+            recordatorio.id, 
+            recordatorio.titulo, 
+            recordatorio.descripcion, 
+            recordatorio.fecha, 
+            recordatorio.horaAviso
+        )
+        
+        // Si hay una segunda hora de aviso, programar otra notificación
+        if (recordatorio.horaAviso2.isNotEmpty()) {
+            programarAlarma(
+                context, 
+                alarmManager, 
+                "${recordatorio.id}_2", // ID único para la segunda notificación
+                recordatorio.titulo,
+                recordatorio.descripcion,
+                recordatorio.fecha,
+                recordatorio.horaAviso2
+            )
+        }
+    }
+    
+    /**
+     * Programa una alarma para un recordatorio.
+     */
+    private fun programarAlarma(
+        context: Context,
+        alarmManager: AlarmManager,
+        id: String,
+        titulo: String,
+        descripcion: String,
+        fecha: Long,
+        horaAviso: String
+    ) {
         // Crear un intent para el NotificationReceiver
         val intent = Intent(context, NotificationReceiver::class.java).apply {
-            putExtra("RECORDATORIO_ID", recordatorio.id)
-            putExtra("RECORDATORIO_TITULO", recordatorio.titulo)
-            putExtra("RECORDATORIO_DESCRIPCION", recordatorio.descripcion)
+            putExtra("RECORDATORIO_ID", id)
+            putExtra("RECORDATORIO_TITULO", titulo)
+            putExtra("RECORDATORIO_DESCRIPCION", descripcion)
         }
         
         // Crear un PendingIntent que será activado cuando sea hora de mostrar la notificación
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            recordatorio.id.hashCode(), // Usar el ID como request code para hacerlo único
+            id.hashCode(), // Usar el ID como request code para hacerlo único
             intent,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) 
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE 
@@ -52,12 +89,12 @@ object NotificationUtil {
         
         // Calcular el tiempo para la notificación
         val calendar = Calendar.getInstance().apply {
-            timeInMillis = recordatorio.fecha
+            timeInMillis = fecha
             
             // Ajustar la hora según el formato HH:mm en horaAviso
-            if (recordatorio.horaAviso.isNotEmpty()) {
+            if (horaAviso.isNotEmpty()) {
                 try {
-                    val partes = recordatorio.horaAviso.split(":")
+                    val partes = horaAviso.split(":")
                     if (partes.size == 2) {
                         set(Calendar.HOUR_OF_DAY, partes[0].toInt())
                         set(Calendar.MINUTE, partes[1].toInt())
@@ -76,9 +113,9 @@ object NotificationUtil {
         // Log para depuración
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
         Log.d("NotificationUtil", "Programando notificación para: ${sdf.format(Date(timeInMillis))}")
-        Log.d("NotificationUtil", "ID del recordatorio: ${recordatorio.id}")
-        Log.d("NotificationUtil", "Título: ${recordatorio.titulo}")
-        Log.d("NotificationUtil", "Hora de aviso: ${recordatorio.horaAviso}")
+        Log.d("NotificationUtil", "ID: $id")
+        Log.d("NotificationUtil", "Título: $titulo")
+        Log.d("NotificationUtil", "Hora de aviso: $horaAviso")
         
         // Programar la alarma
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

@@ -1,5 +1,6 @@
 package com.taxiflash.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -88,14 +89,18 @@ fun ResumenGastosMensualScreen(
                         mesSeleccionado = cal.time
                     }
                 ) {
-                    Icon(Icons.Default.ArrowBack, "Mes anterior",tint =  MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Default.ArrowBack, 
+                        "Mes anterior",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
                 Text(
                     text = formatoMesAno.format(mesSeleccionado).uppercase(),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 IconButton(
@@ -105,7 +110,11 @@ fun ResumenGastosMensualScreen(
                         mesSeleccionado = cal.time
                     }
                 ) {
-                    Icon(Icons.Default.ArrowForward, "Mes siguiente",tint =  MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Default.ArrowForward, 
+                        "Mes siguiente",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
 
@@ -183,11 +192,20 @@ fun ResumenGastosMensualScreen(
                     Text(
                         text = "%.2f€".format(
                             gastos.filter { gasto ->
-                                formatoFecha.parse(gasto.fecha)?.let {
-                                    val calGasto = Calendar.getInstance().apply { time = it }
-                                    val calSeleccionado = Calendar.getInstance().apply { time = mesSeleccionado }
-                                    calGasto.get(Calendar.MONTH) == calSeleccionado.get(Calendar.MONTH)
-                                } ?: false
+                                if (gasto.fecha.isNullOrEmpty()) {
+                                    false
+                                } else {
+                                    try {
+                                        formatoFecha.parse(gasto.fecha)?.let {
+                                            val calGasto = Calendar.getInstance().apply { time = it }
+                                            val calSeleccionado = Calendar.getInstance().apply { time = mesSeleccionado }
+                                            calGasto.get(Calendar.MONTH) == calSeleccionado.get(Calendar.MONTH)
+                                        } ?: false
+                                    } catch (e: Exception) {
+                                        Log.e("ResumenGastosMensual", "Error al analizar fecha: ${gasto.fecha}", e)
+                                        false
+                                    }
+                                }
                             }.sumOf { it.importeTotal }
                         ),
                         fontWeight = FontWeight.Bold,

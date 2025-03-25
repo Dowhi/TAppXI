@@ -64,7 +64,7 @@ object ExportUtils {
             
             FileProvider.getUriForFile(
                 context,
-                "${context.packageName}.fileprovider",
+                "${context.packageName}.provider",
                 file
             )
         } catch (e: Exception) {
@@ -99,7 +99,7 @@ object ExportUtils {
             
             FileProvider.getUriForFile(
                 context,
-                "${context.packageName}.fileprovider",
+                "${context.packageName}.provider",
                 file
             )
         } catch (e: Exception) {
@@ -135,7 +135,7 @@ object ExportUtils {
             
             FileProvider.getUriForFile(
                 context,
-                "${context.packageName}.fileprovider",
+                "${context.packageName}.provider",
                 file
             )
         } catch (e: Exception) {
@@ -266,7 +266,7 @@ object ExportUtils {
             
             FileProvider.getUriForFile(
                 context,
-                "${context.packageName}.fileprovider",
+                "${context.packageName}.provider",
                 file
             )
         } catch (e: Exception) {

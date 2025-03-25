@@ -101,7 +101,7 @@ object DatabaseExportUtils {
                 try {
                     val uri = FileProvider.getUriForFile(
                         context,
-                        "${context.packageName}.fileprovider",
+                        "${context.packageName}.provider",
                         file
                     )
                     Log.d(TAG, "URI generado correctamente: $uri")

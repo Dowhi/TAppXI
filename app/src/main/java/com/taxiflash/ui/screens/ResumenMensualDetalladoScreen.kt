@@ -112,7 +112,7 @@ fun ResumenMensualDetalladoScreen(
                         Icon(
                             Icons.Default.ArrowBack, 
                             "Mes anterior",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -120,7 +120,7 @@ fun ResumenMensualDetalladoScreen(
                         text = formatoMesAno.format(mesSeleccionado).uppercase(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     IconButton(
@@ -133,7 +133,7 @@ fun ResumenMensualDetalladoScreen(
                         Icon(
                             Icons.Default.ArrowForward, 
                             "Mes siguiente",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -257,7 +257,7 @@ fun ResumenMensualDetalladoScreen(
                 ) {
                 InfoCard("NETO", numberFormat.format(resumen.totalIngresos).toString(), Color.Blue)
                 InfoCard("GASTOS", numberFormat.format(resumen.totalGastos).toString(), Color.Blue)
-                InfoCard("TOTAL", resumen.totalNeto.toString(), Color.Blue)
+                InfoCard("TOTAL", numberFormat.format(resumen.totalNeto).toString(), Color.Blue)
             }
             }
         }

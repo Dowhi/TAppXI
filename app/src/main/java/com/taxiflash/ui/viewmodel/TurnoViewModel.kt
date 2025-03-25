@@ -96,6 +96,8 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
                 // Obtener fecha actual en formato dd/MM/yyyy
                 val fechaHoy = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
                 
+                Log.d("TurnoViewModel", "Obteniendo siguiente número de turno para fecha: $fechaHoy")
+                
                 // Consultar directamente el último número de turno para hoy
                 val ultimoNumeroTurno = turnoDao.getUltimoNumeroTurnoDia(fechaHoy)
                 
@@ -106,11 +108,12 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
                     1
                 }
                 
-                Log.d("TurnoViewModel", "Último número de turno para hoy: $ultimoNumeroTurno, siguiente: $siguienteNumero")
+                Log.d("TurnoViewModel", "Último número de turno para $fechaHoy: $ultimoNumeroTurno, siguiente: $siguienteNumero")
                 
                 return@withContext siguienteNumero
             } catch (e: Exception) {
                 Log.e("TurnoViewModel", "Error al obtener siguiente número de turno", e)
+                e.printStackTrace()
                 return@withContext 1
             }
         }
@@ -119,6 +122,14 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun obtenerSiguienteNumeroTurnoPorFecha(fechaStr: String): Int {
         return withContext(Dispatchers.IO) {
             try {
+                Log.d("TurnoViewModel", "Obteniendo siguiente número de turno para fecha específica: $fechaStr")
+                
+                // Verificar formato de fecha
+                if (!fechaStr.matches(Regex("^\\d{2}/\\d{2}/\\d{4}$"))) {
+                    Log.e("TurnoViewModel", "Formato de fecha incorrecto: $fechaStr. Se esperaba dd/MM/yyyy")
+                    return@withContext 1
+                }
+                
                 // Usar directamente el formato dd/MM/yyyy para la consulta
                 // Consultar directamente el último número de turno para la fecha seleccionada
                 val ultimoNumeroTurno = turnoDao.getUltimoNumeroTurnoDia(fechaStr)
@@ -135,6 +146,7 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
                 return@withContext siguienteNumero
             } catch (e: Exception) {
                 Log.e("TurnoViewModel", "Error al obtener siguiente número de turno por fecha", e)
+                e.printStackTrace()
                 return@withContext 1
             }
         }
@@ -143,54 +155,88 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
     fun guardarTurno() {
         viewModelScope.launch {
             try {
-                if (kmInicioError.value) {
-                    _errorMessage.value = "Por favor, introduces un valor válido para los kilómetros iniciales"
+                Log.d("TurnoViewModel", "Iniciando guardarTurno - kmInicio: ${kmInicio.value}")
+                
+                // Validar el campo de KM
+                if (kmInicio.value.isBlank() || kmInicio.value.toIntOrNull() == null) {
+                    _errorMessage.value = "Por favor, introduce un valor válido para los kilómetros iniciales"
+                    _kmInicioError.value = true
+                    Log.e("TurnoViewModel", "Error: kilómetros iniciales inválidos - '${kmInicio.value}'")
                     return@launch
                 }
-
+                
                 // Verificar que no haya otro turno activo
-                val turnoActivo = turnoDao.getTurnoActivo()
+                val turnoActivo = withContext(Dispatchers.IO) { 
+                    turnoDao.getTurnoActivo() 
+                }
                 if (turnoActivo != null) {
                     _errorMessage.value = "Ya hay un turno activo. Cérralo antes de iniciar uno nuevo."
+                    _turnoActivoId.value = turnoActivo.idTurno
+                    _turnoActivoInfo.value = turnoActivo
+                    _puedeCrearTurno.value = false
+                    Log.e("TurnoViewModel", "Error: Ya existe un turno activo con ID: ${turnoActivo.idTurno}")
                     return@launch
                 }
-
-                // Preparar los datos del turno usando la fecha seleccionada
-                val fechaSeleccionadaStr = fechaSeleccionada.value
-                val fechaDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(fechaSeleccionadaStr) ?: Date()
-                val fecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(fechaDate)
+                
+                // Generar fecha actual en formato dd/MM/yyyy
+                val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val fechaActual = formatoFecha.format(Date())
                 
                 // Generar ID único para el turno: yyyyMMdd-numeroTurno
-                val fechaId = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(fechaDate)
+                val formatoFechaId = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                val fechaId = formatoFechaId.format(Date())
                 val turnoId = "$fechaId-${numeroTurno.value}"
                 
+                // Crear objeto turno
                 val turno = Turno(
-                    idTurno = turnoId,
-                    fecha = fecha,
+                    fecha = fechaActual,
                     horaInicio = horaInicio.value,
                     horaFin = "",
                     kmInicio = kmInicio.value.toInt(),
                     kmFin = 0,
                     numeroTurno = numeroTurno.value,
+                    idTurno = turnoId,
                     activo = true
                 )
                 
-                // Guardar en la base de datos
-                withContext(Dispatchers.IO) {
-                    turnoDao.insertTurno(turno)
-                }
+                Log.d("TurnoViewModel", "Guardando turno: fecha=$fechaActual, idTurno=$turnoId, numeroTurno=${numeroTurno.value}")
                 
-                // Actualizar estados
-                _turnoGuardado.value = turnoId
-                _turnoActivoId.value = turnoId
-                _turnoActivoInfo.value = turno
-                _puedeCrearTurno.value = false
-                _errorMessage.value = null
+                // Guardar en la base de datos
+                try {
+                    val idInsertado = withContext(Dispatchers.IO) {
+                        turnoDao.insertTurno(turno)
+                    }
+                    
+                    Log.d("TurnoViewModel", "Turno guardado en base de datos con ID: $idInsertado")
+                    
+                    // Verificar que el turno se haya guardado correctamente
+                    val turnoGuardado = withContext(Dispatchers.IO) {
+                        turnoDao.getTurnoById(turnoId)
+                    }
+                    
+                    if (turnoGuardado == null) {
+                        throw Exception("El turno no se guardó correctamente en la base de datos")
+                    }
+                    
+                    Log.d("TurnoViewModel", "Verificación de turno guardado exitosa: ${turnoGuardado.idTurno}")
+                    
+                    // Actualizar estados
+                    _turnoGuardado.value = turnoId
+                    _turnoActivoId.value = turnoId
+                    _turnoActivoInfo.value = turno
+                    _puedeCrearTurno.value = false
+                    _errorMessage.value = null
+                } catch (e: Exception) {
+                    Log.e("TurnoViewModel", "Error al guardar turno en base de datos", e)
+                    _errorMessage.value = "Error al guardar el turno en la base de datos: ${e.message}"
+                    return@launch
+                }
                 
                 Log.d("TurnoViewModel", "Turno guardado exitosamente: $turnoId")
             } catch (e: Exception) {
                 _errorMessage.value = "Error al guardar el turno: ${e.message}"
-                Log.e("TurnoViewModel", "Error al guardar turno", e)
+                Log.e("TurnoViewModel", "Error en el proceso de guardar turno", e)
+                e.printStackTrace()
             }
         }
     }
@@ -198,16 +244,46 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
     fun verificarTurnoActivo() {
         viewModelScope.launch {
             try {
+                Log.d("TurnoViewModel", "Iniciando verificación de turno activo...")
+                
                 val turnoActivo = withContext(Dispatchers.IO) {
+                    // Primero verificamos la cantidad de turnos activos que hay
+                    val cantidadTurnosActivos = turnoDao.hayTurnoActivo()
+                    Log.d("TurnoViewModel", "Cantidad de turnos activos: $cantidadTurnosActivos")
+                    
+                    // Si hay más de un turno activo, esto es un error de consistencia
+                    if (cantidadTurnosActivos > 1) {
+                        Log.w("TurnoViewModel", "¡Atención! Hay $cantidadTurnosActivos turnos activos, cuando debería haber máximo 1")
+                    }
+                    
+                    // Obtener el turno activo
                     turnoDao.getTurnoActivo()
                 }
                 
-                _turnoActivoId.value = turnoActivo?.idTurno
-                _turnoActivoInfo.value = turnoActivo
-                _puedeCrearTurno.value = turnoActivo == null
-                Log.d("TurnoViewModel", "Verificación de turno activo: ${turnoActivo?.idTurno ?: "No hay turno activo"}")
+                if (turnoActivo != null) {
+                    Log.d("TurnoViewModel", "Turno activo encontrado: ID=${turnoActivo.idTurno}, Fecha=${turnoActivo.fecha}, KmInicio=${turnoActivo.kmInicio}")
+                    _turnoActivoId.value = turnoActivo.idTurno
+                    _turnoActivoInfo.value = turnoActivo
+                    _puedeCrearTurno.value = false
+                } else {
+                    Log.d("TurnoViewModel", "No hay turno activo")
+                    _turnoActivoId.value = null
+                    _turnoActivoInfo.value = null
+                    _puedeCrearTurno.value = true
+                    
+                    // Actualizar el número de turno para el próximo turno
+                    _numeroTurno.value = obtenerSiguienteNumeroTurno()
+                    Log.d("TurnoViewModel", "Número para próximo turno: ${_numeroTurno.value}")
+                }
             } catch (e: Exception) {
                 Log.e("TurnoViewModel", "Error al verificar turno activo", e)
+                e.printStackTrace()
+                
+                // En caso de error, asumimos que no hay turno activo para evitar bloquear al usuario
+                _turnoActivoId.value = null
+                _turnoActivoInfo.value = null
+                _puedeCrearTurno.value = true
+                _errorMessage.value = "Error al verificar el turno activo: ${e.message}"
             }
         }
     }
@@ -262,9 +338,12 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
                 // Actualizar el valor de kmInicio para que los validadores funcionen
                 _kmInicio.value = kmInicioStr
                 
+                Log.d("TurnoViewModel", "Iniciando guardarTurnoConFecha - kmInicio: $kmInicioStr, fecha: $fechaFormateada")
+                
                 if (kmInicioStr.isBlank() || kmInicioStr.toIntOrNull() == null) {
                     _errorMessage.value = "Por favor, introduce un valor válido para los kilómetros iniciales"
                     _kmInicioError.value = true
+                    Log.e("TurnoViewModel", "Error: kilómetros iniciales inválidos - '$kmInicioStr'")
                     return@launch
                 }
 
@@ -272,6 +351,7 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
                 val turnoActivo = turnoDao.getTurnoActivo()
                 if (turnoActivo != null) {
                     _errorMessage.value = "Ya hay un turno activo. Cérralo antes de iniciar uno nuevo."
+                    Log.e("TurnoViewModel", "Error: Ya existe un turno activo con ID: ${turnoActivo.idTurno}")
                     return@launch
                 }
 
@@ -301,8 +381,27 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
                 )
 
                 // Guardar en base de datos
-                withContext(Dispatchers.IO) {
-                    turnoDao.insertTurno(turno)
+                try {
+                    val idInsertado = withContext(Dispatchers.IO) {
+                        turnoDao.insertTurno(turno)
+                    }
+                    
+                    Log.d("TurnoViewModel", "Turno guardado en base de datos con ID: $idInsertado")
+                    
+                    // Verificar que el turno se haya guardado correctamente
+                    val turnoGuardado = withContext(Dispatchers.IO) {
+                        turnoDao.getTurnoById(turnoId)
+                    }
+                    
+                    if (turnoGuardado == null) {
+                        throw Exception("El turno no se guardó correctamente en la base de datos")
+                    }
+                    
+                    Log.d("TurnoViewModel", "Verificación de turno guardado exitosa: ${turnoGuardado.idTurno}")
+                } catch (e: Exception) {
+                    Log.e("TurnoViewModel", "Error al guardar turno en base de datos", e)
+                    _errorMessage.value = "Error al guardar el turno en la base de datos: ${e.message}"
+                    return@launch
                 }
                 
                 // Actualizar información del turno activo
@@ -316,7 +415,8 @@ class TurnoViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d("TurnoViewModel", "Turno con fecha personalizada guardado exitosamente: $turnoId")
             } catch (e: Exception) {
                 _errorMessage.value = "Error al guardar el turno: ${e.message}"
-                Log.e("TurnoViewModel", "Error al guardar turno con fecha personalizada", e)
+                Log.e("TurnoViewModel", "Error en el proceso de guardar turno con fecha personalizada", e)
+                e.printStackTrace()
             }
         }
     }

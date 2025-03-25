@@ -1,5 +1,6 @@
 package com.taxiflash.ui.navigation
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
@@ -227,6 +228,65 @@ fun AppNavHost(
                 navController = navController
             )
         }
+
+        // Verificar si existe una ruta para OtrosIngresosScreen
+        // Si no existe, agregarla
+        composable(NavRoutes.OTROS_INGRESOS) {
+            OtrosIngresosScreen(navController = navController)
+        }
+
+        // Editar Día Screen
+        composable(
+            route = NavRoutes.EDICION_DIA,
+            arguments = listOf(
+                navArgument("fecha") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val fecha = backStackEntry.arguments?.getString("fecha") ?: ""
+            Log.d("AppNavigation", "Navegando a EdicionDiaScreen con fecha: $fecha")
+            EdicionDiaScreen(
+                fechaStr = fecha,
+                onNavigateBack = { navController.navigateUp() },
+                onEditarCarrera = { carreraId ->
+                    // Navegar a la pantalla de edición de carrera
+                    val route = NavRoutes.DETALLE_CARRERA.replace("{carreraId}", carreraId.toString())
+                    navController.navigate(route)
+                }
+            )
+        }
+
+        // ResumenDiarioScreen sin fecha específica (usa la fecha actual)
+        composable(route = NavRoutes.RESUMEN_DIARIO) {
+            ResumenDiarioScreen(
+                fecha = SimpleDateFormat("ddMMyyyy", Locale("es", "ES")).format(Date()),
+                onNavigateBack = { navController.navigateUp() },
+                onEditarDia = { fechaStr ->
+                    navController.navigate(NavRoutes.EDICION_DIA.replace("{fecha}", fechaStr))
+                }
+            )
+        }
+
+        // ResumenDiarioScreen con fecha específica
+        composable(
+            route = NavRoutes.RESUMEN_DIARIO_FECHA,
+            arguments = listOf(
+                navArgument("fecha") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val fecha = backStackEntry.arguments?.getString("fecha") ?: 
+                SimpleDateFormat("ddMMyyyy", Locale("es", "ES")).format(Date())
+            ResumenDiarioScreen(
+                fecha = fecha,
+                onNavigateBack = { navController.navigateUp() },
+                onEditarDia = { fechaStr ->
+                    navController.navigate(NavRoutes.EDICION_DIA.replace("{fecha}", fechaStr))
+                }
+            )
+        }
     }
 }
 
@@ -277,7 +337,10 @@ private fun NavGraphBuilder.mainScreens(
     ) {
         ResumenDiarioScreen(
             fecha = SimpleDateFormat("ddMMyyyy", Locale("es", "ES")).format(Date()),
-            onNavigateBack = { navController.navigateUp() }
+            onNavigateBack = { navController.navigateUp() },
+            onEditarDia = { fechaStr ->
+                navController.navigate(NavRoutes.EDICION_DIA.replace("{fecha}", fechaStr))
+            }
         )
     }
     
@@ -560,25 +623,20 @@ private fun NavGraphBuilder.resumenScreens(navController: NavHostController) {
     // Pantalla de resumen diario por fecha
     composable(
         route = NavRoutes.RESUMEN_DIARIO_FECHA,
-        arguments = listOf(navArgument("fecha") { type = NavType.StringType }),
-        enterTransition = {
-            slideIntoContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Left,
-                animationSpec = tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutOfContainer(
-                towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                animationSpec = tween(300)
-            )
-        }
+        arguments = listOf(
+            navArgument("fecha") {
+                type = NavType.StringType
+            }
+        )
     ) { backStackEntry ->
         val fecha = backStackEntry.arguments?.getString("fecha") ?: 
             SimpleDateFormat("ddMMyyyy", Locale("es", "ES")).format(Date())
         ResumenDiarioScreen(
             fecha = fecha,
-            onNavigateBack = { navController.popBackStack() }
+            onNavigateBack = { navController.navigateUp() },
+            onEditarDia = { fechaStr ->
+                navController.navigate(NavRoutes.EDICION_DIA.replace("{fecha}", fechaStr))
+            }
         )
     }
     

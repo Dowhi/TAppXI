@@ -82,6 +82,9 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.animation.AnimatedVisibility
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -261,8 +264,8 @@ fun RecordatoriosScreen(
         if (mostrarDialogoNuevo) {
             NuevoRecordatorioDialog(
                 onDismiss = { mostrarDialogoNuevo = false },
-                onGuardar = { tipo, titulo, fecha, descripcion, horaAviso ->
-                    viewModel.guardarRecordatorio(tipo, titulo, fecha, descripcion, horaAviso)
+                onGuardar = { tipo, titulo, fecha, descripcion, horaAviso, horaAviso2 ->
+                    viewModel.guardarRecordatorio(tipo, titulo, fecha, descripcion, horaAviso, horaAviso2)
                     Toast.makeText(
                         context,
                         "Recordatorio guardado",
@@ -441,7 +444,7 @@ fun RecordatorioItem(
 @Composable
 fun NuevoRecordatorioDialog(
     onDismiss: () -> Unit,
-    onGuardar: (TipoRecordatorio, String, Long, String, String) -> Unit,
+    onGuardar: (TipoRecordatorio, String, Long, String, String, String) -> Unit,
     recordatorio: Recordatorio? = null
 ) {
     // Estados para los campos
@@ -449,7 +452,11 @@ fun NuevoRecordatorioDialog(
     var descripcion by remember { mutableStateOf(recordatorio?.descripcion ?: "") }
     var tipoSeleccionado by remember { mutableStateOf(recordatorio?.tipo ?: TipoRecordatorio.ITV) }
     var horaAviso by remember { mutableStateOf(recordatorio?.horaAviso ?: "09:00") }
+    var horaAviso2 by remember { mutableStateOf(recordatorio?.horaAviso2 ?: "") }
     var mostrarMenuTipo by remember { mutableStateOf(false) }
+    
+    // Estado para el segundo aviso
+    var segundoAvisoActivo by remember { mutableStateOf(recordatorio?.horaAviso2?.isNotEmpty() ?: false) }
     
     // Estado para el selector de fecha
     val datePickerState = rememberDatePickerState(
@@ -459,6 +466,7 @@ fun NuevoRecordatorioDialog(
     
     // Estado para el selector de hora
     var mostrarTimePicker by remember { mutableStateOf(false) }
+    var mostrarTimePicker2 by remember { mutableStateOf(false) }
     
     // Validación
     val tituloValido = titulo.isNotBlank()
@@ -555,7 +563,7 @@ fun NuevoRecordatorioDialog(
                 OutlinedTextField(
                     value = horaAviso,
                     onValueChange = { },
-                    label = { Text("Hora de aviso") },
+                    label = { Text("Hora del primer aviso") },
                     readOnly = true,
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
@@ -567,6 +575,55 @@ fun NuevoRecordatorioDialog(
                         }
                     }
                 )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Switch para activar/desactivar segundo aviso
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Añadir segundo aviso",
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(
+                        checked = segundoAvisoActivo,
+                        onCheckedChange = { 
+                            segundoAvisoActivo = it
+                            if (!it) {
+                                horaAviso2 = ""
+                            } else if (horaAviso2.isEmpty()) {
+                                horaAviso2 = "18:00" // Valor por defecto
+                            }
+                        }
+                    )
+                }
+                
+                // Selector de segunda hora de aviso (solo si está activo)
+                AnimatedVisibility(visible = segundoAvisoActivo) {
+                    Column {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        OutlinedTextField(
+                            value = horaAviso2,
+                            onValueChange = { },
+                            label = { Text("Hora del segundo aviso") },
+                            readOnly = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                IconButton(onClick = { mostrarTimePicker2 = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications,
+                                        contentDescription = "Seleccionar segunda hora"
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
@@ -589,8 +646,10 @@ fun NuevoRecordatorioDialog(
                             titulo,
                             datePickerState.selectedDateMillis ?: System.currentTimeMillis(),
                             descripcion,
-                            horaAviso
+                            horaAviso,
+                            if (segundoAvisoActivo) horaAviso2 else ""
                         )
+                        onDismiss()
                     }
                 },
                 enabled = tituloValido
@@ -605,21 +664,17 @@ fun NuevoRecordatorioDialog(
         }
     )
     
-    // Diálogo de selección de fecha
+    // Selector de fecha
     if (mostrarDatePicker) {
         DatePickerDialog(
             onDismissRequest = { mostrarDatePicker = false },
             confirmButton = {
-                TextButton(
-                    onClick = { mostrarDatePicker = false }
-                ) {
+                Button(onClick = { mostrarDatePicker = false }) {
                     Text("Aceptar")
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { mostrarDatePicker = false }
-                ) {
+                TextButton(onClick = { mostrarDatePicker = false }) {
                     Text("Cancelar")
                 }
             }
@@ -628,13 +683,26 @@ fun NuevoRecordatorioDialog(
         }
     }
     
-    // Diálogo de selección de hora
+    // Selector de hora (primer aviso)
     if (mostrarTimePicker) {
         TimePickerDialog(
             onDismissRequest = { mostrarTimePicker = false },
-            onTimeSelected = { hora, minuto ->
+            horaActual = horaAviso,
+            onConfirm = { hora, minuto ->
                 horaAviso = String.format("%02d:%02d", hora, minuto)
                 mostrarTimePicker = false
+            }
+        )
+    }
+    
+    // Selector de hora (segundo aviso)
+    if (mostrarTimePicker2) {
+        TimePickerDialog(
+            onDismissRequest = { mostrarTimePicker2 = false },
+            horaActual = horaAviso2.takeIf { it.isNotEmpty() } ?: "18:00",
+            onConfirm = { hora, minuto ->
+                horaAviso2 = String.format("%02d:%02d", hora, minuto)
+                mostrarTimePicker2 = false
             }
         )
     }
@@ -643,14 +711,15 @@ fun NuevoRecordatorioDialog(
 @Composable
 fun TimePickerDialog(
     onDismissRequest: () -> Unit,
-    onTimeSelected: (Int, Int) -> Unit
+    horaActual: String,
+    onConfirm: (Int, Int) -> Unit
 ) {
-    var selectedHour by remember { mutableStateOf(9) }
-    var selectedMinute by remember { mutableStateOf(0) }
+    var selectedHour by remember { mutableStateOf(horaActual.split(":")[0].toInt()) }
+    var selectedMinute by remember { mutableStateOf(horaActual.split(":")[1].toInt()) }
     
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("Seleccionar hora de aviso") },
+        title = { Text("Seleccionar hora") },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -662,34 +731,79 @@ fun TimePickerDialog(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Selector de hora
-                    NumberPicker(
-                        value = selectedHour,
-                        onValueChange = { selectedHour = it },
-                        range = 0..23,
-                        modifier = Modifier.weight(1f)
-                    )
+                    // Horas
+                    IconButton(
+                        onClick = {
+                            selectedHour = if (selectedHour > 0) selectedHour - 1 else 23
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Hora anterior",
+                            modifier = Modifier.rotate(90f)
+                        )
+                    }
                     
                     Text(
-                        text = ":",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
+                        text = String.format("%02d", selectedHour),
+                        style = MaterialTheme.typography.headlineMedium,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
                     
-                    // Selector de minutos
-                    NumberPicker(
-                        value = selectedMinute,
-                        onValueChange = { selectedMinute = it },
-                        range = 0..59,
-                        modifier = Modifier.weight(1f)
+                    IconButton(
+                        onClick = {
+                            selectedHour = if (selectedHour < 23) selectedHour + 1 else 0
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Hora siguiente",
+                            modifier = Modifier.rotate(270f)
+                        )
+                    }
+                    
+                    Text(
+                        text = ":",
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.padding(horizontal = 8.dp)
                     )
+                    
+                    // Minutos
+                    IconButton(
+                        onClick = {
+                            selectedMinute = if (selectedMinute > 0) selectedMinute - 1 else 59
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Minuto anterior",
+                            modifier = Modifier.rotate(90f)
+                        )
+                    }
+                    
+                    Text(
+                        text = String.format("%02d", selectedMinute),
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    
+                    IconButton(
+                        onClick = {
+                            selectedMinute = if (selectedMinute < 59) selectedMinute + 1 else 0
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Minuto siguiente",
+                            modifier = Modifier.rotate(270f)
+                        )
+                    }
                 }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onTimeSelected(selectedHour, selectedMinute) }
+                onClick = { onConfirm(selectedHour, selectedMinute) }
             ) {
                 Text("Aceptar")
             }
@@ -702,53 +816,6 @@ fun TimePickerDialog(
             }
         }
     )
-}
-
-@Composable
-fun NumberPicker(
-    value: Int,
-    onValueChange: (Int) -> Unit,
-    range: IntRange,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-    ) {
-        IconButton(
-            onClick = {
-                if (value < range.last) {
-                    onValueChange(value + 1)
-                }
-            }
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Incrementar",
-                modifier = Modifier.rotate(90f)
-            )
-        }
-        
-        Text(
-            text = String.format("%02d", value),
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
-        
-        IconButton(
-            onClick = {
-                if (value > range.first) {
-                    onValueChange(value - 1)
-                }
-            }
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Decrementar",
-                modifier = Modifier.rotate(270f)
-            )
-        }
-    }
 }
 
 // Función para calcular días restantes
@@ -777,7 +844,8 @@ data class Recordatorio(
     val titulo: String = "",
     val descripcion: String = "",
     val fecha: Long = 0,
-    val horaAviso: String = "09:00" // Hora por defecto: 9:00 AM
+    val horaAviso: String = "09:00", // Hora por defecto: 9:00 AM
+    val horaAviso2: String = ""      // Segunda hora de aviso (opcional)
 )
 
 enum class TipoRecordatorio {

@@ -14,7 +14,7 @@ import androidx.core.view.WindowCompat
 
 // 🎨 Paleta personalizada TaxiFlash - Colores principales
 val TaxiBlue = Color(0xFF1E3F8B)
-val TaxiBlueLight = Color(0xFF4A6AC0)
+val TaxiBlueLight = Color(0xFF687DB6)
 val TaxiBlueDark = Color(0xFF0D2454)
 
 // Alias para mantener compatibilidad
@@ -30,14 +30,14 @@ val TaxiLightYellow = TaxiYellowLight
 val TaxiDarkYellow = TaxiYellowDark
 
 val TaxiGreen = Color(0xFF00BFA5)
-val TaxiRed = Color(0xFFE53935)
+val TaxiRed = Color(0xFFFC0B05)
 
 // Colores adicionales
 val TaxiLightGreen = Color(0xFFA5D6A7)
 val TaxiDarkGreen = Color(0xFF388E3C)
 
-val TaxiLightRed = Color(0xFFEF9A9A)
-val TaxiDarkRed = Color(0xFFC62828)
+val TaxiLightRed = Color(0xF7FD0321)
+val TaxiDarkRed = Color(0xFFFA0202)
 
 // Fondos
 val BackgroundLight = Color(0xFFF8F9FA)

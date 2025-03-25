@@ -3,6 +3,9 @@ package com.taxiflash.ui.data
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Interface para acceder a la tabla de turnos
+ */
 @Dao
 interface TurnoDao {
     @Query("SELECT COUNT(*) FROM turnos WHERE fecha = :fecha")

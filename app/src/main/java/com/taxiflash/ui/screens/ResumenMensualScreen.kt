@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,6 +30,12 @@ import com.taxiflash.ui.viewmodel.ResumenMensualViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.platform.LocalContext
+import com.taxiflash.ui.viewmodel.ResumenAnualViewModel
+import com.taxiflash.ui.utils.PdfGenerator
+import android.widget.Toast
+import kotlinx.coroutines.launch
+import android.util.Log
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +47,9 @@ fun ResumenMensualScreen(
 ) {
     val resumenes by viewModel.resumenesMensuales.collectAsState()
     val numberFormat = NumberFormat.getCurrencyInstance(Locale("es", "ES"))
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val anualViewModel: ResumenAnualViewModel = viewModel()
     
     // Variable para el mes seleccionado
     var mesSeleccionado by remember {
@@ -119,7 +129,7 @@ fun ResumenMensualScreen(
                     Icon(
                         Icons.Default.ArrowBack, 
                         "Mes anterior",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -127,7 +137,7 @@ fun ResumenMensualScreen(
                     text = formatoMesAno.format(mesSeleccionado).uppercase(),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 IconButton(
@@ -140,7 +150,7 @@ fun ResumenMensualScreen(
                     Icon(
                         Icons.Default.ArrowForward, 
                         "Mes siguiente",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -296,30 +306,26 @@ fun ResumenMensualScreen(
                         item {
                             val totalIngresos = resumenes.sumOf { it.ingresos }
                             val totalGastos = resumenes.sumOf { it.gastos }
-                            val totalNeto = resumenes.sumOf { it.total }
-
-                            Spacer(modifier = Modifier.height(8.dp))
+                            val totalNeto = totalIngresos - totalGastos
                             
-                            Divider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                color = MaterialTheme.colorScheme.primary,
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                                 thickness = 1.dp
                             )
-
+                            
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 16.dp),
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "TOTAL:",
+                                    text = "TOTAL",
                                     fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Start,
                                     modifier = Modifier.weight(1f),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 14.sp
+                                    fontSize = 13.sp
                                 )
                                 Text(
                                     text = numberFormat.format(totalIngresos).replace("€", ""),
@@ -345,6 +351,94 @@ fun ResumenMensualScreen(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )
+                            }
+                            
+                            // Agregar botón para generar PDF
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Button(
+                                    onClick = { 
+                                        if (resumenes.isNotEmpty()) {
+                                            // Obtener el mes actual como índice (0-11)
+                                            val calendar = Calendar.getInstance().apply { time = mesSeleccionado }
+                                            val mesIndex = calendar.get(Calendar.MONTH)
+                                            
+                                            // Mostrar mensaje de generación
+                                            Toast.makeText(
+                                                context,
+                                                "Generando PDF, espere por favor...",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            
+                                            // Generar el PDF
+                                            coroutineScope.launch {
+                                                try {
+                                                    val pdfUri = anualViewModel.generarInformePdf(context, mesIndex)
+                                                    if (pdfUri != null) {
+                                                        Log.d("ResumenMensualScreen", "PDF generado con éxito: $pdfUri")
+                                                        // Mostrar mensaje de éxito
+                                                        Toast.makeText(
+                                                            context,
+                                                            "PDF generado con éxito",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                        
+                                                        // Abrir el PDF
+                                                        PdfGenerator.abrirPdf(context, pdfUri)
+                                                    } else {
+                                                        Log.e("ResumenMensualScreen", "Error: pdfUri es null")
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Error al generar el PDF: URI es null",
+                                                            Toast.LENGTH_LONG
+                                                        ).show()
+                                                    }
+                                                } catch (e: Exception) {
+                                                    Log.e("ResumenMensualScreen", "Error al generar PDF", e)
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Error al generar el PDF: ${e.message}",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                }
+                                            }
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "No hay datos para generar un informe",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = 4.dp,
+                                        pressedElevation = 8.dp
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PictureAsPdf,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                    
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    
+                                    Text(
+                                        "Generar Informe PDF",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 14.sp
+                                    )
+                                }
                             }
                         }
                     }

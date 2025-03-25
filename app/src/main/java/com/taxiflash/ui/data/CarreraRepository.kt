@@ -27,6 +27,6 @@ class CarreraRepository @Inject constructor(
     }
     
     suspend fun deleteCarrerasByTurno(turnoId: String) {
-        carreraDao.deleteCarrerasByTurno(turnoId)
+        carreraDao.deleteCarrerasByTurnoId(turnoId)
     }
 } 

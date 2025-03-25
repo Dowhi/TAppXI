@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,6 +42,7 @@ import com.taxiflash.ui.data.FormaPago
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
+import com.taxiflash.ui.components.LoadingIndicator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -241,54 +243,58 @@ fun VistaCarrerasScreen(
             )
         },
         floatingActionButton = {
-            // Restaurando los botones flotantes originales
-            Row(
+            // Alineación simétrica para los botones flotantes con posición fija en la parte inferior
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+                    .padding(bottom = 16.dp)
             ) {
-                FloatingActionButton(
-                    onClick = { 
-                        if (turnoActivo) {
-                            onCerrarTurno()
-                        }
-                    },
-                    containerColor = secondaryColor,
-                    modifier = Modifier.padding(start = 16.dp),
-                    shape = CircleShape,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 6.dp
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp), // Aumentando el padding horizontal para alejarlos de los bordes
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Filled.ExitToApp, 
-                        "Cerrar Turno",
-                        tint = MaterialTheme.colorScheme.onSecondary
-                    )
-                }
+                    // Botón cerrar turno (izquierda)
+                    FloatingActionButton(
+                        onClick = {
+                            if (turnoActivo) {
+                                onCerrarTurno()
+                            }
+                        },
+                        containerColor = secondaryColor,
+                        shape = CircleShape,
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.ExitToApp,
+                            contentDescription = "Cerrar Turno",
+                            tint = MaterialTheme.colorScheme.onSecondary
+                        )
+                    }
 
-                FloatingActionButton(
-                    onClick = {
-                        if (turnoActivo) {
-                            onNuevaCarrera()
-                        }
-                    },
-                    containerColor = primaryColor,
-                    shape = CircleShape,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 6.dp
-                    )
-                ) {
-                    Icon(
-                        Icons.Filled.Add, 
-                        "Nueva carrera",
-                        tint = onPrimaryColor
-                    )
+                    // Botón nueva carrera (derecha)
+                    FloatingActionButton(
+                        onClick = {
+                            if (turnoActivo) {
+                                onNuevaCarrera()
+                            }
+                        },
+                        containerColor = primaryColor,
+                        shape = CircleShape,
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = "Nueva carrera",
+                            tint = onPrimaryColor
+                        )
+                    }
                 }
             }
-        },
+        }
+        ,
         containerColor = backgroundColor
     ) { padding ->
         Column(
@@ -360,14 +366,13 @@ fun VistaCarrerasScreen(
                                     "Pendiente" } else {
                                     "Excede"
                                 },
-                                value =
-                                "${String.format("%.2f", kotlin.math.abs(resumen.faltaPara100))}€",
+                                value = "${String.format("%.2f", resumen.faltaPara100.let { if (it < 0) -it else it })}€",
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxWidth(), // Para que se adapte al espacio disponible
                                 valueColor = if (resumen.faltaPara100 > 0) errorColor else successColor,
                                 backgroundColor = onPrimaryColor.copy(alpha = 0.1f),
-                                valueFontSize = 18.sp,
+                                valueFontSize = 22.sp,
                                 labelFontSize= 18.sp,
                                 isLargeText = true
                             )
@@ -530,20 +535,20 @@ fun VistaCarrerasScreen(
                             modifier = Modifier.width(30.dp)
                         ) {
                             Image(
-                                painter = painterResource(R.drawable.antena_radio),
+                                painter = painterResource(R.drawable.svg_radio_emisora_blanco),
                                 contentDescription = "Emisora",
-                                modifier = Modifier.size(30.dp)  // Aumentado tamaño
+                                modifier = Modifier.size(32.dp)  // Aumentado tamaño
                             )
                         }
                         
                         Box(
-                            contentAlignment = Alignment.Center,
+                            contentAlignment = Alignment.CenterEnd,
                             modifier = Modifier.width(30.dp)
                         ) {
                             Image(
-                                painter = painterResource(R.drawable.aeropuerto_20_),
+                                painter = painterResource(R.drawable.svg_aeropuerto_blanco),
                                 contentDescription = "Aeropuerto",
-                                modifier = Modifier.size(30.dp)  // Aumentado tamaño
+                                modifier = Modifier.size(32.dp)  // Aumentado tamaño
                             )
                         }
                         
@@ -581,7 +586,7 @@ fun VistaCarrerasScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 1.dp, horizontal = 4.dp), // Reducido aún más el padding vertical
+                                        .padding(vertical = 0.5.dp, horizontal = 4.dp), // Reducido aún más el padding vertical
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
@@ -639,30 +644,46 @@ fun VistaCarrerasScreen(
                                         color = onSurfaceColor
                                     )
                                     
-                                    // Emisora
+                                    // Emisora con iconos según el tema - forzar los iconos correctos
                                     Box(
                                         contentAlignment = Alignment.Center,
                                         modifier = Modifier.width(30.dp)
                                     ) {
                                         if (carrera.emisora) {
+                                            // Determinar si estamos en modo oscuro de manera más confiable
+                                            val isDarkTheme = isSystemInDarkTheme()
+                                            // Garantizar el uso del icono correcto según el tema
                                             Image(
-                                                painter = painterResource(R.drawable.antena_radio),
+                                                painter = painterResource(
+                                                    id = if (isDarkTheme) 
+                                                            R.drawable.svg_radio_emisora_blanco
+                                                         else 
+                                                            R.drawable.svg_radio_emisora
+                                                ),
                                                 contentDescription = "Emisora",
-                                                modifier = Modifier.size(24.dp)  // Aumentado tamaño
+                                                modifier = Modifier.size(24.dp)
                                             )
                                         }
                                     }
                                     
-                                    // Aeropuerto
+                                    // Aeropuerto con iconos según el tema - forzar los iconos correctos
                                     Box(
                                         contentAlignment = Alignment.Center,
                                         modifier = Modifier.width(30.dp)
                                     ) {
                                         if (carrera.aeropuerto) {
+                                            // Determinar si estamos en modo oscuro de manera más confiable
+                                            val isDarkTheme = isSystemInDarkTheme()
+                                            // Garantizar el uso del icono correcto según el tema
                                             Image(
-                                                painter = painterResource(R.drawable.aeropuerto_20_),
+                                                painter = painterResource(
+                                                    id = if (isDarkTheme) 
+                                                            R.drawable.svg_aeropuerto_blanco
+                                                         else 
+                                                            R.drawable.svg_aeropuerto_b
+                                                ),
                                                 contentDescription = "Aeropuerto",
-                                                modifier = Modifier.size(24.dp)  // Aumentado tamaño
+                                                modifier = Modifier.size(24.dp)
                                             )
                                         }
                                     }
@@ -681,6 +702,10 @@ fun VistaCarrerasScreen(
                 }
             }
         }
+
+        // Al final del composable, justo antes de cerrar el Scaffold
+        // añadir el indicador de carga
+        LoadingIndicator(isLoading = viewModel.isLoading.collectAsState().value)
     }
 }
 
@@ -708,10 +733,10 @@ fun InfoBox(
         ) {
             Text(
                 text = label,
-                color = valueColor.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                 style = TextStyle(
                     fontSize = labelFontSize,
-                fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium
                 )
             )
             Text(
@@ -719,7 +744,7 @@ fun InfoBox(
                 color = valueColor,
                 style = TextStyle(
                     fontSize = if (isLargeText) valueFontSize else 14.sp,
-                fontWeight = if (isLargeText) FontWeight.Bold else FontWeight.SemiBold
+                    fontWeight = if (isLargeText) FontWeight.Bold else FontWeight.SemiBold
                 )
             )
         }

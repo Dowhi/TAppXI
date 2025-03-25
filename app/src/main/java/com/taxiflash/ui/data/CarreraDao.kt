@@ -3,10 +3,14 @@ package com.taxiflash.ui.data
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Interface para acceder a la tabla de carreras
+ */
 @Dao
 interface CarreraDao {
     @Query("SELECT * FROM carreras ORDER BY fecha DESC")
@@ -27,8 +31,8 @@ interface CarreraDao {
     @Query("SELECT * FROM carreras WHERE turno LIKE 'Turno %'")
     fun getCarrerasConTurnoSimple(): Flow<List<Carrera>>
 
-    @Insert
-    suspend fun insertCarrera(carrera: Carrera)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCarrera(carrera: Carrera): Long
 
     @Update
     suspend fun updateCarrera(carrera: Carrera)
@@ -49,11 +53,14 @@ interface CarreraDao {
     fun getCarrerasByRangoFecha(fechaInicioStr: String, fechaFinStr: String): Flow<List<Carrera>>
 
     @Query("DELETE FROM carreras WHERE turno = :turnoId")
-    suspend fun deleteCarrerasByTurno(turnoId: String)
+    suspend fun deleteCarrerasByTurnoId(turnoId: String)
 
     /**
      * Obtiene los ingresos mensuales
      */
     @Query("SELECT COALESCE(SUM(importeReal), 0) FROM carreras WHERE substr(fecha, 4, 2) = :mes AND substr(fecha, 7, 4) = :año")
     suspend fun getIngresosMensuales(mes: String, año: String): Double
+
+    @Query("SELECT * FROM carreras WHERE turno = :turnoId")
+    suspend fun getCarrerasByTurnoId(turnoId: String): List<Carrera>
 }
