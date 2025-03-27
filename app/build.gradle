@@ -215,6 +215,11 @@ dependencies {
     // PDF Generation
     implementation 'com.itextpdf:itextpdf:5.5.13.3'
     implementation 'androidx.documentfile:documentfile:1.0.1'
+
+    // WorkManager con soporte para Coroutines
+    def work_version = "2.9.0"
+    implementation "androidx.work:work-runtime-ktx:$work_version"
+    implementation "androidx.work:work-runtime:$work_version"
 }
 
 // Configuración para Kapt

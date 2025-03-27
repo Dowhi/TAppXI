@@ -162,6 +162,7 @@ fun AjustesScreen(navController: NavController) {
     
     TaxiFlashScaffold(
         navController = navController,
+        showBottomBar = false,
         topBar = {
             TopAppBar(
                 title = {

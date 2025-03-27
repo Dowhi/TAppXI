@@ -21,7 +21,7 @@ import java.util.Locale
 
 class EdicionDiaViewModel(
     application: Application,
-    private val fechaStr: String // Formato: "yyyy-MM-dd"
+    private val fechaStr: String // Formato: "dd/MM/yyyy"
 ) : ViewModel() {
     private val turnoRepository = TurnoRepository(application)
     private val carreraRepository = CarreraRepository(application)
@@ -34,6 +34,9 @@ class EdicionDiaViewModel(
     
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    
+    private val _fechasDisponibles = MutableStateFlow<List<String>>(emptyList())
+    val fechasDisponibles: StateFlow<List<String>> = _fechasDisponibles.asStateFlow()
     
     // Cache para cambios en edición
     private val cambiosKilometros = mutableMapOf<String, Pair<Int, Int>>() // turnoId -> (kmInicio, kmFin)
@@ -48,103 +51,199 @@ class EdicionDiaViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                Log.d("EdicionDiaViewModel", "Formato de fecha original: $fechaStr")
+                Log.d("EdicionDiaViewModel", "Iniciando carga de datos para fecha: $fechaStr")
                 
-                // Intentar diferentes formatos de fecha - La fecha en la DB es exactamente "24/03/2025"
-                var fechaFormateada = fechaStr
-                
-                // Intentar convertir de yyyy-MM-dd a dd/MM/yyyy
-                try {
-                    val formatoEntrada = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    val fecha = formatoEntrada.parse(fechaStr)
-                    if (fecha != null) {
-                        fechaFormateada = formatoSalida.format(fecha)
-                        Log.d("EdicionDiaViewModel", "Fecha convertida a formato dd/MM/yyyy: $fechaFormateada")
-                    }
-                } catch (e: Exception) {
-                    Log.e("EdicionDiaViewModel", "Error al convertir formato yyyy-MM-dd: ${e.message}")
-                    
-                    // Si la conversión falla, intentar extraer directamente de la fecha
-                    try {
-                        // Para fechas como 2025-03-24 convertir a 24/03/2025
-                        val partes = fechaStr.split("-")
-                        if (partes.size == 3) {
-                            fechaFormateada = "${partes[2]}/${partes[1]}/${partes[0]}"
-                            Log.d("EdicionDiaViewModel", "Fecha convertida manualmente: $fechaFormateada")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("EdicionDiaViewModel", "Error al convertir fecha manualmente: ${e.message}")
-                    }
-                }
-                
-                // Probar directamente con el formato de la base de datos
-                val fechaBaseDatos = obtenerFechaExacta(fechaStr)
-                if (fechaBaseDatos != null) {
-                    fechaFormateada = fechaBaseDatos
-                    Log.d("EdicionDiaViewModel", "Usando formato exacto de base de datos: $fechaFormateada")
-                }
-                
-                Log.d("EdicionDiaViewModel", "Consultando turnos para fecha formateada final: $fechaFormateada")
-                
-                // Cargar los turnos de la fecha específica
                 withContext(Dispatchers.IO) {
-                    // Intentar con la fecha formateada primero
-                    var turnosDelDia = turnoRepository.getTurnosByFecha(fechaFormateada)
-                    Log.d("EdicionDiaViewModel", "Turnos encontrados con fecha formateada: ${turnosDelDia.size}")
+                    // Primero, normalizar la fecha al formato dd/MM/yyyy
+                    val fechaNormalizada = normalizarFecha(fechaStr)
+                    Log.d("EdicionDiaViewModel", "Fecha normalizada: $fechaNormalizada")
                     
-                    // Si no hay resultados, intentar con búsqueda por formato exacto en la DB
+                    // Obtener todos los turnos para debugging
+                    val todosTurnos = turnoRepository.getAllTurnos()
+                    val fechas = todosTurnos.map { it.fecha }.distinct()
+                    _fechasDisponibles.value = fechas
+                    Log.d("EdicionDiaViewModel", "Todas las fechas disponibles: $fechas")
+                    
+                    // Buscar turnos con la fecha normalizada
+                    var turnosDelDia = turnoRepository.getTurnosByFecha(fechaNormalizada)
+                    
+                    // Si no se encuentran turnos, intentar con otras variantes
                     if (turnosDelDia.isEmpty()) {
-                        // Obtener todos los turnos y buscar por fecha
-                        val todosTurnos = turnoRepository.getAllTurnos()
-                        Log.d("EdicionDiaViewModel", "Total de turnos en DB: ${todosTurnos.size}")
+                        val variantes = generarVariantesFecha(fechaNormalizada)
+                        Log.d("EdicionDiaViewModel", "Intentando con variantes: $variantes")
                         
-                        // Imprimir todas las fechas disponibles para debugging
-                        val fechasDisponibles = todosTurnos.map { it.fecha }.distinct()
-                        Log.d("EdicionDiaViewModel", "Fechas disponibles en DB: $fechasDisponibles")
-                        
-                        // Intentar diferentes variantes de formato
-                        val fechasAlternativas = obtenerVariantesDeFecha(fechaStr)
-                        Log.d("EdicionDiaViewModel", "Intentando con variantes de fecha: $fechasAlternativas")
-                        
-                        for (fechaAlt in fechasAlternativas) {
-                            val turnosAlt = turnoRepository.getTurnosByFecha(fechaAlt)
-                            if (turnosAlt.isNotEmpty()) {
-                                Log.d("EdicionDiaViewModel", "Encontrados ${turnosAlt.size} turnos con formato alternativo: $fechaAlt")
-                                turnosDelDia = turnosAlt
+                        for (variante in variantes) {
+                            turnosDelDia = turnoRepository.getTurnosByFecha(variante)
+                            if (turnosDelDia.isNotEmpty()) {
+                                Log.d("EdicionDiaViewModel", "Encontrados turnos con variante: $variante")
                                 break
                             }
                         }
                     }
                     
-                    if (turnosDelDia.isNotEmpty()) {
-                        Log.d("EdicionDiaViewModel", "Turnos encontrados finalmente: ${turnosDelDia.size}")
-                        Log.d("EdicionDiaViewModel", "Primer turno: ${turnosDelDia[0].idTurno}, fecha: ${turnosDelDia[0].fecha}")
-                        
-                        _turnos.value = turnosDelDia
-                        
-                        // Obtener todas las carreras asociadas a los turnos
-                        val todasLasCarreras = mutableListOf<Carrera>()
-                        for (turno in turnosDelDia) {
-                            Log.d("EdicionDiaViewModel", "Obteniendo carreras para turno: ${turno.idTurno}")
-                            val carrerasDeTurno = carreraRepository.getCarrerasForTurno(turno.idTurno)
-                            Log.d("EdicionDiaViewModel", "Carreras encontradas para turno ${turno.idTurno}: ${carrerasDeTurno.size}")
-                            todasLasCarreras.addAll(carrerasDeTurno)
+                    // Si aún no hay turnos, buscar por coincidencia parcial
+                    if (turnosDelDia.isEmpty()) {
+                        val partesFecha = fechaNormalizada.split("/")
+                        if (partesFecha.size == 3) {
+                            val dia = partesFecha[0]
+                            val mes = partesFecha[1]
+                            val anio = partesFecha[2]
+                            
+                            turnosDelDia = todosTurnos.filter { turno ->
+                                turno.fecha.contains(dia) && 
+                                turno.fecha.contains(mes) && 
+                                turno.fecha.contains(anio)
+                            }
                         }
-                        _carreras.value = todasLasCarreras
-                        Log.d("EdicionDiaViewModel", "Total de carreras cargadas: ${todasLasCarreras.size}")
-                    } else {
-                        Log.d("EdicionDiaViewModel", "No se encontraron turnos para ningún formato de fecha")
-                        _turnos.value = emptyList()
-                        _carreras.value = emptyList()
                     }
+                    
+                    // Actualizar los turnos encontrados
+                    _turnos.value = turnosDelDia
+                    
+                    // Cargar las carreras asociadas
+                    val todasLasCarreras = mutableListOf<Carrera>()
+                    turnosDelDia.forEach { turno ->
+                        val carrerasDeTurno = carreraRepository.getCarrerasForTurno(turno.idTurno)
+                        Log.d("EdicionDiaViewModel", "Carreras para turno ${turno.idTurno}: ${carrerasDeTurno.size}")
+                        todasLasCarreras.addAll(carrerasDeTurno)
+                    }
+                    _carreras.value = todasLasCarreras
                 }
             } catch (e: Exception) {
                 Log.e("EdicionDiaViewModel", "Error al cargar datos: ${e.message}", e)
+                _turnos.value = emptyList()
+                _carreras.value = emptyList()
             } finally {
                 _isLoading.value = false
             }
         }
+    }
+    
+    private fun normalizarFecha(fecha: String): String {
+        try {
+            Log.d("EdicionDiaViewModel", "Normalizando fecha: $fecha")
+            
+            // Si la fecha ya está en formato dd/MM/yyyy
+            if (fecha.matches(Regex("\\d{2}/\\d{2}/\\d{4}"))) {
+                return fecha
+            }
+            
+            // Si la fecha está en formato yyyyMMdd
+            if (fecha.matches(Regex("\\d{8}"))) {
+                val year = fecha.substring(0, 4)
+                val month = fecha.substring(4, 6)
+                val day = fecha.substring(6, 8)
+                val fechaNormalizada = "$day/$month/$year"
+                Log.d("EdicionDiaViewModel", "Fecha normalizada desde yyyyMMdd: $fechaNormalizada")
+                return fechaNormalizada
+            }
+            
+            // Si la fecha tiene guiones, convertir a formato con barras
+            if (fecha.contains("-")) {
+                val partes = fecha.split("-")
+                if (partes.size == 3) {
+                    val fechaNormalizada = "${partes[0]}/${partes[1]}/${partes[2]}"
+                    Log.d("EdicionDiaViewModel", "Fecha normalizada desde guiones: $fechaNormalizada")
+                    return fechaNormalizada
+                }
+            }
+            
+            // Intentar parsear con SimpleDateFormat como último recurso
+            val posiblesFormatos = listOf(
+                "yyyyMMdd",
+                "yyyy-MM-dd",
+                "dd-MM-yyyy",
+                "dd/MM/yyyy",
+                "yyyy/MM/dd"
+            )
+            
+            for (formato in posiblesFormatos) {
+                try {
+                    val parser = SimpleDateFormat(formato, Locale.getDefault())
+                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                    val fechaDate = parser.parse(fecha)
+                    if (fechaDate != null) {
+                        val fechaNormalizada = formatter.format(fechaDate)
+                        Log.d("EdicionDiaViewModel", "Fecha normalizada con formato $formato: $fechaNormalizada")
+                        return fechaNormalizada
+                    }
+                } catch (e: Exception) {
+                    continue
+                }
+            }
+            
+            Log.w("EdicionDiaViewModel", "No se pudo normalizar la fecha, devolviendo original: $fecha")
+            return fecha
+            
+        } catch (e: Exception) {
+            Log.e("EdicionDiaViewModel", "Error normalizando fecha: ${e.message}")
+            return fecha
+        }
+    }
+    
+    private fun generarVariantesFecha(fechaStr: String): List<String> {
+        val variantes = mutableListOf<String>()
+        
+        // Añadir la fecha original
+        variantes.add(fechaStr)
+        
+        try {
+            // Si la fecha contiene '/', intentar varias formas con días/meses con/sin ceros
+            if (fechaStr.contains("/")) {
+                val partes = fechaStr.split("/")
+                if (partes.size == 3) {
+                    val dia = partes[0].toIntOrNull() ?: return variantes
+                    val mes = partes[1].toIntOrNull() ?: return variantes
+                    val anio = partes[2]
+                    
+                    // Variantes con formato dd/MM/yyyy y d/M/yyyy
+                    variantes.add(String.format("%02d/%02d/%s", dia, mes, anio)) // 01/01/2025
+                    variantes.add(String.format("%d/%d/%s", dia, mes, anio))      // 1/1/2025
+                    variantes.add(String.format("%02d/%d/%s", dia, mes, anio))    // 01/1/2025
+                    variantes.add(String.format("%d/%02d/%s", dia, mes, anio))    // 1/01/2025
+                    
+                    // También probar con guiones
+                    variantes.add(String.format("%02d-%02d-%s", dia, mes, anio)) // 01-01-2025
+                    variantes.add(String.format("%d-%d-%s", dia, mes, anio))      // 1-1-2025
+                    variantes.add(String.format("%02d-%d-%s", dia, mes, anio))    // 01-1-2025
+                    variantes.add(String.format("%d-%02d-%s", dia, mes, anio))    // 1-01-2025
+                }
+            } 
+            // Si la fecha contiene '-', intentar varias formas
+            else if (fechaStr.contains("-")) {
+                val partes = fechaStr.split("-")
+                if (partes.size == 3) {
+                    // Si es formato yyyy-MM-dd
+                    if (partes[0].length == 4) {
+                        val anio = partes[0]
+                        val mes = partes[1].toIntOrNull() ?: return variantes
+                        val dia = partes[2].toIntOrNull() ?: return variantes
+                        
+                        // Variantes con formato dd/MM/yyyy
+                        variantes.add(String.format("%02d/%02d/%s", dia, mes, anio)) // 01/01/2025
+                        variantes.add(String.format("%d/%d/%s", dia, mes, anio))      // 1/1/2025
+                        variantes.add(String.format("%02d/%d/%s", dia, mes, anio))    // 01/1/2025
+                        variantes.add(String.format("%d/%02d/%s", dia, mes, anio))    // 1/01/2025
+                    }
+                    // Si es formato dd-MM-yyyy
+                    else {
+                        val dia = partes[0].toIntOrNull() ?: return variantes
+                        val mes = partes[1].toIntOrNull() ?: return variantes
+                        val anio = partes[2]
+                        
+                        // Variantes con formato dd/MM/yyyy
+                        variantes.add(String.format("%02d/%02d/%s", dia, mes, anio)) // 01/01/2025
+                        variantes.add(String.format("%d/%d/%s", dia, mes, anio))      // 1/1/2025
+                        variantes.add(String.format("%02d/%d/%s", dia, mes, anio))    // 01/1/2025
+                        variantes.add(String.format("%d/%02d/%s", dia, mes, anio))    // 1/01/2025
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("EdicionDiaViewModel", "Error al generar variantes: ${e.message}")
+        }
+        
+        return variantes.distinct()
     }
     
     // Obtener la fecha exacta como aparece en la base de datos
@@ -173,41 +272,26 @@ class EdicionDiaViewModel(
     // Obtener varias variantes de la fecha para intentar
     private fun obtenerVariantesDeFecha(fechaStr: String): List<String> {
         val variantes = mutableListOf<String>()
-        
         try {
-            // Si la fecha ya está en formato dd/MM/yyyy, agregarla
+            // Si ya está en formato dd/MM/yyyy, añadirlo directamente
             if (fechaStr.matches(Regex("\\d{2}/\\d{2}/\\d{4}"))) {
                 variantes.add(fechaStr)
-                return variantes
             }
-            
-            // Si la fecha está en formato yyyy-MM-dd
+
+            // Si está en formato yyyy-MM-dd, convertirlo
             if (fechaStr.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) {
-                val partes = fechaStr.split("-")
-                if (partes.size == 3) {
-                    // Convertir a dd/MM/yyyy
-                    variantes.add("${partes[2]}/${partes[1]}/${partes[0]}")
-                    return variantes
+                val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val date = inputFormat.parse(fechaStr)
+                date?.let {
+                    variantes.add(outputFormat.format(it))
                 }
             }
-            
-            // Intentar convertir usando SimpleDateFormat como último recurso
-            try {
-                val formatoEntrada = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                val fecha = formatoEntrada.parse(fechaStr)
-                if (fecha != null) {
-                    variantes.add(formatoSalida.format(fecha))
-                }
-            } catch (e: Exception) {
-                Log.e("EdicionDiaViewModel", "Error al convertir fecha con SimpleDateFormat: ${e.message}")
-            }
-            
+
             Log.d("EdicionDiaViewModel", "Variantes de fecha generadas: $variantes")
         } catch (e: Exception) {
-            Log.e("EdicionDiaViewModel", "Error al generar variantes de fecha: ${e.message}")
+            Log.e("EdicionDiaViewModel", "Error al obtener variantes de fecha: ${e.message}", e)
         }
-        
         return variantes.distinct()
     }
     

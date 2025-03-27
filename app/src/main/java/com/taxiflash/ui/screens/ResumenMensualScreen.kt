@@ -176,7 +176,7 @@ fun ResumenMensualScreen(
                     Icon(
                         imageVector = Icons.Rounded.CalendarMonth,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(32.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -331,7 +331,7 @@ fun ResumenMensualScreen(
                                     text = numberFormat.format(totalIngresos).replace("€", ""),
                                     textAlign = TextAlign.End,
                                     modifier = Modifier.weight(1.1f),
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = Color(0xFF08FC12),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
                                 )

@@ -38,21 +38,26 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EdicionDiaScreen(
-    fechaStr: String, // Formato: "yyyy-MM-dd"
+    fechaStr: String, // Formato puede ser "yyyy-MM-dd" o "dd/MM/yyyy"
     onNavigateBack: () -> Unit,
     onEditarCarrera: (Long) -> Unit
 ) {
     val context = LocalContext.current
+    
+    // Formatear la fecha para mostrarla en el título y usarla en el ViewModel
+    val fechaFormateada = fechaStr
+    
+    // Log para depuración
+    Log.d("EdicionDiaScreen", "Fecha recibida: $fechaStr")
+    
     val viewModel: EdicionDiaViewModel = viewModel(
         factory = EdicionDiaViewModelFactory(context.applicationContext as android.app.Application, fechaStr)
     )
     
-    // Log para depuración
-    Log.d("EdicionDiaScreen", "Pantalla iniciada con fecha: $fechaStr")
-    
     val turnos by viewModel.turnos.collectAsState()
     val carreras by viewModel.carreras.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val fechasDisponibles by viewModel.fechasDisponibles.collectAsState()
     
     // Log para depuración
     LaunchedEffect(turnos) {
@@ -90,18 +95,6 @@ fun EdicionDiaScreen(
             Log.d("EdicionDiaScreen", "Valores actualizados desde turnos: kmInicio=$kmInicio, kmFin=$kmFin, horaInicio=$horaInicio, horaFin=$horaFin")
         } else {
             Log.d("EdicionDiaScreen", "No hay turnos para mostrar")
-        }
-    }
-    
-    // Formatear la fecha para mostrarla en el título
-    val fechaFormateada = remember(fechaStr) {
-        try {
-            val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val date = inputFormat.parse(fechaStr)
-            date?.let { outputFormat.format(it) } ?: fechaStr
-        } catch (e: Exception) {
-            fechaStr
         }
     }
     
@@ -254,6 +247,34 @@ fun EdicionDiaScreen(
                         )
                         
                         Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            "Verifique que existan turnos para esta fecha en la base de datos.",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        if (fechasDisponibles.isNotEmpty()) {
+                            Text(
+                                "Fechas disponibles en la base de datos:",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            Spacer(modifier = Modifier.height(4.dp))
+                            
+                            Text(
+                                fechasDisponibles.joinToString(", "),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                         
                         Button(
                             onClick = onNavigateBack,

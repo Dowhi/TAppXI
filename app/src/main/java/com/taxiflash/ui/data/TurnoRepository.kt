@@ -4,6 +4,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Singleton
 class TurnoRepository @Inject constructor(
@@ -23,7 +26,18 @@ class TurnoRepository @Inject constructor(
     
     // Obtener turnos por fecha exacta
     suspend fun getTurnosByFechaExacta(fecha: String): List<Turno> {
-        return turnoDao.getTurnosByFechaExacta(fecha)
+        return try {
+            // La fecha viene en formato dd/MM/yyyy, necesitamos convertirla a dd/MM/yyyy para la búsqueda
+            val formatoEntrada = SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES"))
+            val date = formatoEntrada.parse(fecha)
+            val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES"))
+            val fechaBusqueda = formatoSalida.format(date)
+            Log.d("TurnoRepository", "Buscando turnos para fecha: $fechaBusqueda")
+            turnoDao.getTurnosByFechaExacta(fechaBusqueda)
+        } catch (e: Exception) {
+            Log.e("TurnoRepository", "Error al formatear fecha: ${e.message}")
+            emptyList()
+        }
     }
     
     // Obtener turnos entre fechas - convertir a Flow

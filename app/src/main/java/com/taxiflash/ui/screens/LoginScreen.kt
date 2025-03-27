@@ -24,6 +24,7 @@ import com.taxiflash.ui.viewmodel.UsuarioViewModel
 import com.taxiflash.ui.theme.TaxiDarkGray
 import com.taxiflash.ui.theme.TaxiGray
 import com.taxiflash.ui.theme.TaxiLightGray
+import java.util.Calendar
 
 /**
  * Pantalla de login por PIN
@@ -38,6 +39,7 @@ fun LoginScreen(
     val pin by viewModel.pin.collectAsState()
     val mensajeError by viewModel.mensajeError.collectAsState()
     val pinLength = pin.length
+    val saludo = obtenerSaludo()
 
     val primaryColor = MaterialTheme.colorScheme.primary
     
@@ -59,7 +61,7 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Buenas tardes",
+                text = saludo,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = TaxiDarkGray
@@ -216,5 +218,15 @@ private fun NumberButton(
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold
         )
+    }
+}
+
+fun obtenerSaludo(): String {
+    val hora = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    return when (hora) {
+        in 0..5 -> "Buenas noches"
+        in 6..11 -> "Buenos días"
+        in 12..17 -> "Buenas tardes"
+        else -> "Buenas noches"
     }
 } 

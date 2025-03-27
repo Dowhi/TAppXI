@@ -14,6 +14,9 @@ interface TurnoDao {
     @Query("SELECT * FROM turnos WHERE fecha = :fecha")
     suspend fun getTurnosByFechaExacta(fecha: String): List<Turno>
 
+    @Query("SELECT * FROM turnos WHERE idTurno LIKE :fechaPattern || '%'")
+    suspend fun getTurnosByFechaPattern(fechaPattern: String): List<Turno>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTurno(turno: Turno): Long
 

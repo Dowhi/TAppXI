@@ -133,6 +133,7 @@ fun OtrosIngresosScreen(
     
     TaxiFlashScaffold(
         navController = navController,
+        showBottomBar = false,
         topBar = {
             TopAppBar(
                 title = {
@@ -236,201 +237,201 @@ fun FormularioTab(
     onGuardarClick: () -> Unit,
     isEditing: Boolean,
     onEliminarClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Sección de información básica
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    "Información del Ingreso",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                // Concepto
-                OutlinedTextField(
-                    value = concepto,
-                    onValueChange = onConceptoChange,
-                    label = { Text("Concepto") },
-                    placeholder = { Text("Ej: Servicio extra, Propina especial...") },
-                    leadingIcon = { 
-                        Icon(
-                            imageVector = Icons.Default.Description, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        ) 
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Fecha
-                OutlinedTextField(
-                    value = fecha,
+                // Sección de información básica
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            "Información del Ingreso",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        // Concepto
+                        OutlinedTextField(
+                            value = concepto,
+                    onValueChange = onConceptoChange,
+                            label = { Text("Concepto") },
+                            placeholder = { Text("Ej: Servicio extra, Propina especial...") },
+                            leadingIcon = { 
+                                Icon(
+                                    imageVector = Icons.Default.Description, 
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                ) 
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Fecha
+                        OutlinedTextField(
+                            value = fecha,
                     onValueChange = onFechaChange,
-                    label = { Text("Fecha") },
-                    leadingIcon = { 
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        ) 
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-        }
+                            label = { Text("Fecha") },
+                            leadingIcon = { 
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday, 
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                ) 
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+                }
 
-        // Sección de importes
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    "Información Económica",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                // Sección de importes
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            "Información Económica",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
 
-                // Importe
-                OutlinedTextField(
-                    value = importe,
+                        // Importe
+                        OutlinedTextField(
+                            value = importe,
                     onValueChange = onImporteChange,
-                    label = { Text("Importe (€)") },
-                    leadingIcon = { 
-                        Icon(
-                            imageVector = Icons.Default.Euro, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        ) 
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-        }
+                            label = { Text("Importe (€)") },
+                            leadingIcon = { 
+                                Icon(
+                                    imageVector = Icons.Default.Euro, 
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                ) 
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+                }
 
-        // Sección de descripción
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    "Descripción",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                // Sección de descripción
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            "Descripción",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
 
-                // Descripción
-                OutlinedTextField(
-                    value = descripcion,
+                        // Descripción
+                        OutlinedTextField(
+                            value = descripcion,
                     onValueChange = onDescripcionChange,
-                    label = { Text("Descripción detallada") },
-                    placeholder = { Text("Detalles del ingreso...") },
-                    leadingIcon = { 
-                        Icon(
-                            imageVector = Icons.Default.Info, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        ) 
-                    },
+                            label = { Text("Descripción detallada") },
+                            placeholder = { Text("Detalles del ingreso...") },
+                            leadingIcon = { 
+                                Icon(
+                                    imageVector = Icons.Default.Info, 
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                ) 
+                            },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Notas adicionales
-                OutlinedTextField(
-                    value = notas,
+                        OutlinedTextField(
+                            value = notas,
                     onValueChange = onNotasChange,
                     label = { Text("Notas adicionales") },
                     placeholder = { Text("Cualquier otra información relevante...") },
-                    leadingIcon = { 
-                        Icon(
-                            imageVector = Icons.Default.Note, 
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        ) 
-                    },
+                            leadingIcon = { 
+                                Icon(
+                                    imageVector = Icons.Default.Note, 
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                ) 
+                            },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-        }
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                cursorColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+                }
 
         // Botones de acción
         Row(
@@ -521,7 +522,7 @@ fun ResumenTab(
                 )
                 
                 IconButton(
-                    onClick = { 
+                    onClick = {
                         if (mesSeleccionado < 12) {
                             onMesChange(mesSeleccionado + 1)
                         } else {

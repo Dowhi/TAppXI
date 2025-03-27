@@ -110,6 +110,7 @@ fun RecordatoriosScreen(
     
     TaxiFlashScaffold(
         navController = navController,
+        showBottomBar = false,
         topBar = {
             TopAppBar(
                 title = {

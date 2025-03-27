@@ -125,6 +125,7 @@ fun InicioScreen(
     
     TaxiFlashScaffold(
         navController = navController,
+        showBottomBar = false,
         topBar = {
             TopAppBar(
                 title = {
@@ -451,7 +452,7 @@ fun InicioScreen(
                                 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.AccountBalance,

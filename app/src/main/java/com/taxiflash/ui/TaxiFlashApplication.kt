@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import com.taxiflash.ui.workers.ExportDatabaseWorker
 import dagger.hilt.android.HiltAndroidApp
 
 /**
@@ -24,6 +25,9 @@ class TaxiFlashApplication : Application() {
         
         // Crear canales de notificación (requerido para Android 8.0+)
         createNotificationChannels()
+        
+        // Programar la exportación periódica de la base de datos
+        ExportDatabaseWorker.schedulePeriodicExport(applicationContext)
     }
     
     /**

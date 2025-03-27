@@ -157,7 +157,8 @@ fun AppNavHost(
                         popUpTo(NavRoutes.REGISTRO_USUARIO) { inclusive = true }
                     }
                 },
-                viewModel = usuarioViewModel
+                viewModel = usuarioViewModel,
+                navController = navController
             )
         }
         
@@ -237,22 +238,33 @@ fun AppNavHost(
 
         // Editar Día Screen
         composable(
-            route = NavRoutes.EDICION_DIA,
+            route = "edicion_dia/{fecha}",
             arguments = listOf(
                 navArgument("fecha") {
                     type = NavType.StringType
                 }
             )
         ) { backStackEntry ->
-            val fecha = backStackEntry.arguments?.getString("fecha") ?: ""
-            Log.d("AppNavigation", "Navegando a EdicionDiaScreen con fecha: $fecha")
+            val fechaParam = backStackEntry.arguments?.getString("fecha") ?: return@composable
+            Log.d("AppNavigation", "Recibiendo fecha para EdicionDiaScreen: $fechaParam")
+            
+            // Convertir la fecha al formato correcto (yyyyMMdd -> dd/MM/yyyy)
+            val fechaFormateada = try {
+                val formatoEntrada = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+                val fecha = formatoEntrada.parse(fechaParam)
+                val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                formatoSalida.format(fecha)
+            } catch (e: Exception) {
+                Log.e("AppNavigation", "Error al formatear fecha: ${e.message}")
+                fechaParam
+            }
+            
+            Log.d("AppNavigation", "Fecha formateada para EdicionDiaScreen: $fechaFormateada")
             EdicionDiaScreen(
-                fechaStr = fecha,
+                fechaStr = fechaFormateada,
                 onNavigateBack = { navController.navigateUp() },
                 onEditarCarrera = { carreraId ->
-                    // Navegar a la pantalla de edición de carrera
-                    val route = NavRoutes.DETALLE_CARRERA.replace("{carreraId}", carreraId.toString())
-                    navController.navigate(route)
+                    navController.navigate(NavRoutes.DETALLE_CARRERA.replace("{carreraId}", carreraId.toString()))
                 }
             )
         }

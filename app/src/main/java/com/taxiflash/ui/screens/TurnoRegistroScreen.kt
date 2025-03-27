@@ -135,6 +135,7 @@ fun TurnoRegistroScreen(
     
     TaxiFlashScaffold(
         navController = navController,
+        showBottomBar = false,
         topBar = {
             TopAppBar(
                 title = {
@@ -219,7 +220,7 @@ fun TurnoRegistroScreen(
                 Text(
                     text = "Turno $numeroTurno",
                     style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(vertical = 16.dp)
+                    modifier = Modifier.padding(vertical = 2.dp)
                 )
                 
                 // Campo de fecha con selector mejorado
@@ -269,7 +270,7 @@ fun TurnoRegistroScreen(
                                     contentDescription = "Cambiar fecha"
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Cambiar fecha")
+                                Text("Cambiar")
                             }
                         }
                     }

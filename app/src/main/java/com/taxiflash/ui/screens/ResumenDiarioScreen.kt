@@ -45,25 +45,23 @@ fun ResumenDiarioScreen(
     val primaryColor = Color(0xFF1E3F8B) // Color principal azul oscuro
     var showDatePicker by remember { mutableStateOf(false) }
     
+    var selectedDate by remember { mutableStateOf(parseFecha(fecha)) }
+    
     // Formatear la fecha para mostrarla en el título
-    val fechaFormateada = remember(fecha) {
+    val fechaFormateada = remember(selectedDate) {
         try {
-            val inputFormat = SimpleDateFormat("ddMMyyyy", Locale("es", "ES"))
-            val date = inputFormat.parse(fecha)
             val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES"))
-            outputFormat.format(date)
+            outputFormat.format(selectedDate)
         } catch (e: Exception) {
             fecha
         }
     }
     
     // Formatear la fecha para edición (yyyy-MM-dd)
-    val fechaParaEdicion = remember(fecha) {
+    val fechaParaEdicion = remember(selectedDate) {
         try {
-            val inputFormat = SimpleDateFormat("ddMMyyyy", Locale("es", "ES"))
-            val date = inputFormat.parse(fecha)
             val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale("es", "ES"))
-            val resultado = outputFormat.format(date)
+            val resultado = outputFormat.format(selectedDate)
             Log.d("ResumenDiarioScreen", "Fecha formateada para edición: $fecha -> $resultado")
             resultado
         } catch (e: Exception) {
@@ -71,8 +69,6 @@ fun ResumenDiarioScreen(
             fecha
         }
     }
-
-    var selectedDate by remember { mutableStateOf(parseFecha(fecha)) }
 
     LaunchedEffect(selectedDate) {
         viewModel.cargarResumenDiario(selectedDate)
@@ -146,7 +142,14 @@ fun ResumenDiarioScreen(
                             tint = Color.White
                         )
                     }
-                    IconButton(onClick = { onEditarDia(fechaParaEdicion) }) {
+                    IconButton(onClick = { 
+                        try {
+                            Log.d("ResumenDiarioScreen", "Enviando fecha para edición: $fechaFormateada")
+                            onEditarDia(fechaFormateada)
+                        } catch (e: Exception) {
+                            Log.e("ResumenDiarioScreen", "Error al formatear fecha para edición: ${e.message}")
+                        }
+                    }) {
                         Icon(
                             Icons.Filled.Edit,
                             contentDescription = "Editar día",
@@ -395,21 +398,20 @@ fun DatePickerDialogModernizado(
         onDismissRequest = onDismissRequest,
         confirmButton = {
             TextButton(
-                onClick = { 
-                    datePickerState.selectedDateMillis?.let { 
-                        onDateSelected(Date(it)) 
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val date = Date(millis)
+                        onDateSelected(date)
                     }
-                    onDismissRequest() 
+                    onDismissRequest()
                 }
-            ) { 
-                Text("Confirmar") 
+            ) {
+                Text("Aceptar")
             }
         },
-        dismissButton = { 
-            TextButton(
-                onClick = onDismissRequest
-            ) { 
-                Text("Cancelar") 
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Cancelar")
             }
         }
     ) {

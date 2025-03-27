@@ -34,7 +34,7 @@ val TaxiRed = Color(0xFFFC0B05)
 
 // Colores adicionales
 val TaxiLightGreen = Color(0xFFA5D6A7)
-val TaxiDarkGreen = Color(0xFF388E3C)
+val TaxiDarkGreen = Color(0xFF08FC12)
 
 val TaxiLightRed = Color(0xF7FD0321)
 val TaxiDarkRed = Color(0xFFFA0202)

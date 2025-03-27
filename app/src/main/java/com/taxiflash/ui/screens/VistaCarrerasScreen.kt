@@ -247,7 +247,7 @@ fun VistaCarrerasScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 4.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -265,7 +265,7 @@ fun VistaCarrerasScreen(
                         },
                         containerColor = secondaryColor,
                         shape = CircleShape,
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp)
                     ) {
                         Icon(
                             Icons.Filled.ExitToApp,
@@ -283,7 +283,7 @@ fun VistaCarrerasScreen(
                         },
                         containerColor = primaryColor,
                         shape = CircleShape,
-                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+                        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 2.dp)
                     ) {
                         Icon(
                             Icons.Filled.Add,
@@ -372,7 +372,7 @@ fun VistaCarrerasScreen(
                                     .fillMaxWidth(), // Para que se adapte al espacio disponible
                                 valueColor = if (resumen.faltaPara100 > 0) errorColor else successColor,
                                 backgroundColor = onPrimaryColor.copy(alpha = 0.1f),
-                                valueFontSize = 22.sp,
+                                valueFontSize = 24.sp,
                                 labelFontSize= 18.sp,
                                 isLargeText = true
                             )
@@ -384,7 +384,7 @@ fun VistaCarrerasScreen(
                                 valueColor = onPrimaryColor,
                                 backgroundColor = onPrimaryColor.copy(alpha = 0.1f),
                                 modifier = Modifier.weight(1f),
-                                valueFontSize = 22.sp,
+                                valueFontSize = 24.sp,
                                 isLargeText = true
                             )
                         }

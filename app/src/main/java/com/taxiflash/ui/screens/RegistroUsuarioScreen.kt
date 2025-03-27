@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.taxiflash.ui.components.TaxiFlashScaffold
 import com.taxiflash.ui.viewmodel.UsuarioViewModel
 import java.time.LocalDate
 
@@ -29,7 +30,8 @@ fun RegistroUsuarioScreen(
     onNavigateBack: () -> Unit,
     onRegistroExitoso: () -> Unit,
     onRecuperarClick: () -> Unit,
-    viewModel: UsuarioViewModel = viewModel()
+    viewModel: UsuarioViewModel = viewModel(),
+    navController: androidx.navigation.NavController
 ) {
     val nombre by viewModel.nombre.collectAsState()
     val pin by viewModel.pin.collectAsState()
@@ -74,7 +76,9 @@ fun RegistroUsuarioScreen(
         }
     }
     
-    Scaffold(
+    TaxiFlashScaffold(
+        navController = navController,
+        showBottomBar = false,
         topBar = {
             TopAppBar(
                 title = {
